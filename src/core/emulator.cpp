@@ -269,6 +269,12 @@ bool Emulator::skip_BIOS()
 
 void Emulator::fast_boot()
 {
+    if (skip_BIOS_hack == LOAD_ELF)
+    {
+        execute_ELF();
+        skip_BIOS_hack = NONE;
+    }
+
     if (skip_BIOS_hack == LOAD_DISC)
     {
         //First we need to determine the name of the game executable
