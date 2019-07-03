@@ -152,8 +152,7 @@ int EmuWindow::load_exec(const char* file_name, bool skip_BIOS)
             exec_file.size()
         );
 
-        if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_ELF);
+        emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_ELF);
     }
     else if (QString::compare(ext, "iso", Qt::CaseInsensitive) == 0)
     {
