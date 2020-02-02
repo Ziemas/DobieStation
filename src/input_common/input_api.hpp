@@ -14,7 +14,7 @@ private:
 	std::unique_ptr<CommonInput> input;
 public:
 	void initalize();
-	void poll();
+	inputEvent poll();
 };
 
 

@@ -1,6 +1,7 @@
 #ifndef LINUXINPUT_H
 #define LINUXINPUT_H
 #include <fcntl.h>
+#include <linux/input-event-codes.h>
 #include <vector>
 #include <iostream>
 #include <errno.h>
@@ -8,6 +9,7 @@
 #include <string.h>
 #include "common_input.hpp"
 #include <libevdev-1.0/libevdev/libevdev.h>
+#include <map>
 
 enum evdev_controls
 {
@@ -25,8 +27,12 @@ class LinuxInput : public CommonInput
 {
 
 private:
-    struct input_event ev;
+    //struct input_event ev;
     struct libevdev *dev;
+
+        std::map<uint, CONTROLLER_BUTTON> buttonMap = {{BTN_TRIGGER, CONTROLLER_BUTTON::CROSS}, {BTN_THUMB2, CONTROLLER_BUTTON::SQUARE},
+                                                       {BTN_BASE6, CONTROLLER_BUTTON::START}, {BTN_BASE5, CONTROLLER_BUTTON::SELECT},
+                                                       {BTN_THUMB, CONTROLLER_BUTTON::CIRCLE}, {BTN_TOP, CONTROLLER_BUTTON::TRIANGLE} };
 
     std::vector<struct libevdev *> interestingDevices;
 
@@ -37,7 +43,7 @@ private:
                                                                                      "event20",
         "event21", "event22", "event23", "event24", "event25", "event26", "event27"};
 
-    std::string filePath = "/dev/input/event27";
+    std::string filePath = "/dev/input/event7";
 
     std::string currentPath;
 
@@ -46,7 +52,7 @@ private:
 
 public:
     bool reset();
-    void poll();
+    inputEvent poll();
 };
 
 #endif

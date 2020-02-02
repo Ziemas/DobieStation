@@ -1,21 +1,45 @@
 #ifndef COMMONINPUT_H
 #define COMMONINPUT_H
 
-enum virtualController
+#include <bits/stdint-uintn.h>
+//enum virtualController
+//{
+//    CROSS,
+//    TRIANGLE,
+//    CIRCLE,
+//    SQUARE,
+//    START,
+//    SELECT,
+//    R1,
+//    R2,
+//    R3,
+//    L1,
+//    L2,
+//    L3,
+//    virtualController_MAX
+//};
+
+enum CONTROLLER_BUTTON
 {
-	CROSS,
-	TRIANGLE,
-	CIRCLE,
-	SQUARE,
-	START,
-	SELECT,
-	R1,
-	R2,
-	R3,
-	L1,
-	L2,
-	L3
+    SELECT,
+    L3,
+    R3,
+    START,
+    UP,
+    RIGHT,
+    DOWN,
+    LEFT,
+    L2,
+    R2,
+    L1,
+    R1,
+    TRIANGLE,
+    CIRCLE,
+    CROSS,
+    SQUARE,
+    CONTROLLER_BUTTON_MAX
 };
+
 
 enum deviceType
 {
@@ -27,7 +51,7 @@ enum deviceType
 
 struct inputEvent
 {
-	virtualController input;
+	bool input[CONTROLLER_BUTTON_MAX];
 	int playerNumber;
 
 	float lStickXAxis;
@@ -36,15 +60,16 @@ struct inputEvent
 	float rStickXAxis;
 	float rStickYAxis;
 
-	void construct(virtualController eventI, int playerNum, int lXAxis, int lYAxis, int rXAxis, int rYAxis)
-	{
-		input = eventI;
-		lStickXAxis = lXAxis;
-		lStickYAxis = lYAxis;
-		rStickXAxis = rXAxis;
-		rStickYAxis = rYAxis;
-		playerNumber = playerNum;
-	}
+	//void construct(virtualController buttonStates[virtualController_MAX], int playerNum, int lXAxis, int lYAxis, int rXAxis, int rYAxis)
+	//{
+	//	//input = eventI;
+	//	input = buttonStates;
+	//	lStickXAxis = lXAxis;
+	//	lStickYAxis = lYAxis;
+	//	rStickXAxis = rXAxis;
+	//	rStickYAxis = rYAxis;
+	//	playerNumber = playerNum;
+	//}
 };
 
 enum DeviceAPI
@@ -67,7 +92,7 @@ protected:
 
 public:
 	virtual bool reset() = 0;
-	virtual void poll() = 0;
+	virtual inputEvent poll() = 0;
 };
 
 #endif

@@ -73,6 +73,7 @@ class EmuThread : public QThread
         void emu_non_fatal_error(QString err);
     public slots:
         void shutdown();
+        void update_controller();
         //void press_key(PAD_BUTTON button);
         //void release_key(PAD_BUTTON button);
         //void update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val);

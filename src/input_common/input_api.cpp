@@ -1,4 +1,5 @@
 #include "input_api.hpp"
+#include "common_input.hpp"
 
 void InputManager::initalize()
 {
@@ -11,7 +12,7 @@ void InputManager::initalize()
 	input->reset();
 }
 
-void InputManager::poll()
+inputEvent InputManager::poll()
 {
-	input->poll();
+	return input->poll();
 }

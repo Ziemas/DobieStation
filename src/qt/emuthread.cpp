@@ -247,7 +247,7 @@ void EmuThread::run()
                 pause(PAUSE_EVENT::GAME_NOT_LOADED);
             }
         }
-        input.poll();
+        update_controller();
     }
 }
 
@@ -256,6 +256,28 @@ void EmuThread::shutdown()
     QMutexLocker locker(&emu_mutex);
     abort = true;
 }
+
+void EmuThread::update_controller()
+{
+    inputEvent state = input.poll();
+    for (int i = 0; i < CONTROLLER_BUTTON_MAX; i++)
+    {
+        if (state.input[i])
+        {
+            std::cout << "button: " << i << " state: "<< state.input[i] << std::endl;
+            e.press_button((PAD_BUTTON)i);
+        }
+        else
+        {
+            e.release_button((PAD_BUTTON)i);
+        }
+    }
+    e.update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::X, state.lStickXAxis);
+    e.update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::Y, state.lStickYAxis);
+    e.update_joystick(JOYSTICK::RIGHT, JOYSTICK_AXIS::X, state.rStickXAxis);
+    e.update_joystick(JOYSTICK::RIGHT, JOYSTICK_AXIS::Y, state.rStickYAxis);
+}
+
 
 /*void EmuThread::press_key(PAD_BUTTON button)
 {
