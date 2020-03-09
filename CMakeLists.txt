@@ -39,6 +39,8 @@ endif()
 
 # Externals
 add_subdirectory(ext/libdeflate)
+set(BUILD_TESTS 0)
+add_subdirectory(ext/cubeb)
 
 # Shared packages
 find_package(Threads REQUIRED)
