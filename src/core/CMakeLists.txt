@@ -166,7 +166,7 @@ set(HEADERS
 add_library(${TARGET} ${SOURCES} ${HEADERS})
 add_library(Dobie::Core ALIAS ${TARGET})
 
-target_link_libraries(${TARGET} Ext::libdeflate Threads::Threads)
+target_link_libraries(${TARGET} Ext::libdeflate Threads::Threads cubeb)
 target_compile_options(${TARGET} PRIVATE ${DOBIE_FLAGS})
 
 if (WIN32)
