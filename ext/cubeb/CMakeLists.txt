@@ -6,9 +6,9 @@ project(cubeb
   VERSION 0.0.0)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-option(BUILD_TESTS "Build tests" ON)
+option(BUILD_TESTS "Build tests" OFF)
 option(BUILD_RUST_LIBS "Build rust backends" OFF)
-option(BUILD_TOOLS "Build tools" ON)
+option(BUILD_TOOLS "Build tools" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
