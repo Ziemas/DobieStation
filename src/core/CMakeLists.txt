@@ -14,6 +14,8 @@ set(SOURCES
     scheduler.cpp
     serialize.cpp
     sif.cpp
+    audio/ps_adpcm.cpp
+    audio/utils.cpp
     ee/bios_hle.cpp
     ee/cop0.cpp
     ee/cop1.cpp
@@ -100,6 +102,8 @@ set(HEADERS
     int128.hpp
     scheduler.hpp
     sif.hpp
+    audio/ps_adpcm.hpp
+    audio/utils.hpp
     ee/bios_hle.hpp
     ee/cop0.hpp
     ee/cop1.hpp
