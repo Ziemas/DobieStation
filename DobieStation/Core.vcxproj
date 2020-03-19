@@ -147,6 +147,7 @@
     <ClCompile Include="$(CoreDir)sif.cpp" />
     <ClCompile Include="$(CoreDir)iop\sio2.cpp" />
     <ClCompile Include="$(CoreDir)iop\spu.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu_tables.cpp" />
     <ClCompile Include="$(CoreDir)ee\timers.cpp" />
     <ClCompile Include="$(CoreDir)ee\vif.cpp" />
     <ClCompile Include="$(CoreDir)ee\ipu\vlc_table.cpp" />
