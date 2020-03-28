@@ -972,7 +972,6 @@ void SPU::load_state(ifstream &state)
     state.read((char*)&transfer_addr, sizeof(transfer_addr));
     state.read((char*)&current_addr, sizeof(current_addr));
     state.read((char*)&autodma_ctrl, sizeof(autodma_ctrl));
-    state.read((char*)&ADMA_left, sizeof(ADMA_left));
     state.read((char*)&input_pos, sizeof(input_pos));
     state.read((char*)&IRQA, sizeof(IRQA));
     state.read((char*)&ENDX, sizeof(ENDX));
@@ -989,7 +988,6 @@ void SPU::save_state(ofstream &state)
     state.write((char*)&transfer_addr, sizeof(transfer_addr));
     state.write((char*)&current_addr, sizeof(current_addr));
     state.write((char*)&autodma_ctrl, sizeof(autodma_ctrl));
-    state.write((char*)&ADMA_left, sizeof(ADMA_left));
     state.write((char*)&input_pos, sizeof(input_pos));
     state.write((char*)&IRQA, sizeof(IRQA));
     state.write((char*)&ENDX, sizeof(ENDX));
