@@ -147,6 +147,7 @@
     <ClCompile Include="$(CoreDir)sif.cpp" />
     <ClCompile Include="$(CoreDir)iop\sio2.cpp" />
     <ClCompile Include="$(CoreDir)iop\spu.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu_envelope.cpp" />
     <ClCompile Include="$(CoreDir)iop\spu_tables.cpp" />
     <ClCompile Include="$(CoreDir)ee\timers.cpp" />
     <ClCompile Include="$(CoreDir)ee\vif.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="$(CoreDir)sif.hpp" />
     <ClInclude Include="$(CoreDir)iop\sio2.hpp" />
     <ClInclude Include="$(CoreDir)iop\spu.hpp" />
+    <ClInclude Include="$(CoreDir)iop\spu_envelope.hpp" />
     <ClInclude Include="$(CoreDir)ee\timers.hpp" />
     <ClInclude Include="$(CoreDir)ee\vif.hpp" />
     <ClInclude Include="$(CoreDir)ee\ipu\vlc_table.hpp" />

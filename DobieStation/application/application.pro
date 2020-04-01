@@ -59,6 +59,7 @@ SOURCES += ../../src/qt/main.cpp \
     ../../src/core/ee/emotion_vu0.cpp \
     ../../src/core/iop/gamepad.cpp \
     ../../src/core/iop/spu.cpp \
+    ../../src/core/iop/spu_envelope.cpp \
     ../../src/core/iop/spu_tables.cpp \
     ../../src/qt/emuthread.cpp \
     ../../src/core/tests/iop/alu.cpp \
@@ -141,6 +142,7 @@ HEADERS += \
     ../../src/core/ee/vu.hpp \
     ../../src/core/iop/gamepad.hpp \
     ../../src/core/iop/spu.hpp \
+    ../../src/core/iop/spu_envelope.hpp \
     ../../src/qt/emuthread.hpp \
     ../../src/core/ee/vif.hpp \
     ../../src/core/int128.hpp \

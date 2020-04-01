@@ -82,6 +82,7 @@ set(SOURCES
     iop/memcard.cpp
     iop/sio2.cpp
     iop/spu.cpp
+    iop/spu_envelope.cpp
     iop/spu_tables.cpp
     jitcommon/emitter64.cpp
     jitcommon/ir_block.cpp
@@ -162,6 +163,7 @@ set(HEADERS
     iop/memcard.hpp
     iop/sio2.hpp
     iop/spu.hpp
+    iop/spu_envelope.hpp
     jitcommon/emitter64.hpp
     jitcommon/ir_block.hpp
     jitcommon/ir_instr.hpp
