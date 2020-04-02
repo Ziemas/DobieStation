@@ -82,7 +82,6 @@
 
   <!-- cpp files -->
   <ItemGroup>
-    <ClCompile Include="$(CoreDir)audio\ps_adpcm.cpp" />
     <ClCompile Include="$(CoreDir)audio\utils.cpp" />
     <ClCompile Include="$(CoreDir)ee\ee_jit.cpp" />
     <ClCompile Include="$(CoreDir)ee\ee_jit64.cpp" />
@@ -146,9 +145,10 @@
     <ClCompile Include="$(CoreDir)serialize.cpp" />
     <ClCompile Include="$(CoreDir)sif.cpp" />
     <ClCompile Include="$(CoreDir)iop\sio2.cpp" />
-    <ClCompile Include="$(CoreDir)iop\spu.cpp" />
-    <ClCompile Include="$(CoreDir)iop\spu_envelope.cpp" />
-    <ClCompile Include="$(CoreDir)iop\spu_tables.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu\spu.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu\spu_adpcm.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu\spu_envelope.cpp" />
+    <ClCompile Include="$(CoreDir)iop\spu\spu_tables.cpp" />
     <ClCompile Include="$(CoreDir)ee\timers.cpp" />
     <ClCompile Include="$(CoreDir)ee\vif.cpp" />
     <ClCompile Include="$(CoreDir)ee\ipu\vlc_table.cpp" />
@@ -163,7 +163,6 @@
 
   <!-- headers -->
   <ItemGroup>
-    <ClInclude Include="$(CoreDir)audio\ps_adpcm.hpp" />
     <ClInclude Include="$(CoreDir)audio\utils.hpp" />
     <ClInclude Include="$(CoreDir)ee\bios_hle.hpp" />
     <ClInclude Include="$(CoreDir)ee\ee_jit.hpp" />
@@ -219,8 +218,9 @@
     <ClInclude Include="$(CoreDir)ee\ipu\motioncode.hpp" />
     <ClInclude Include="$(CoreDir)sif.hpp" />
     <ClInclude Include="$(CoreDir)iop\sio2.hpp" />
-    <ClInclude Include="$(CoreDir)iop\spu.hpp" />
-    <ClInclude Include="$(CoreDir)iop\spu_envelope.hpp" />
+    <ClInclude Include="$(CoreDir)iop\spu\spu.hpp" />
+    <ClInclude Include="$(CoreDir)iop\spu\ps_adpcm.hpp" />
+    <ClInclude Include="$(CoreDir)iop\spu\spu_envelope.hpp" />
     <ClInclude Include="$(CoreDir)ee\timers.hpp" />
     <ClInclude Include="$(CoreDir)ee\vif.hpp" />
     <ClInclude Include="$(CoreDir)ee\ipu\vlc_table.hpp" />
