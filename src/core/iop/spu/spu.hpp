@@ -30,18 +30,16 @@ struct Voice
     ADSR adsr;
 
     uint32_t counter;
-    unsigned sample_idx;
+    uint32_t sample_idx;
     int loop_code;
     bool new_block;
 
     ADPCM_Decoder adpcm;
 
-    int16_t old1 = 0;
-    int16_t old2 = 0;
-    int16_t old3 = 0;
-    int16_t next_sample = 0;
     int16_t outx = 0;
 
+    std::array<int16_t, 4> interp_buffer;
+    uint8_t interp_pos;
     std::array<int16_t, 28> pcm;
 
 
@@ -55,6 +53,9 @@ struct Voice
         right_vol = {};
         mix_state = {};
         adpcm = {};
+        pcm = {};
+        interp_pos = 0;
+        interp_buffer = {};
         pitch = 0;
         start_addr = 0;
         current_addr = 0;

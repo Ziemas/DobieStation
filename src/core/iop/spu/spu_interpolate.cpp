@@ -55,16 +55,18 @@ void SPU::gaussianConstructTable() {
 }
 
 
-int16_t SPU::interpolate(int voice)
+int16_t SPU::interpolate(int voice_id)
 {
-    int16_t i = (voices[voice].counter & 0x0ff0) >> 4;
+    Voice &voice = voices[voice_id];
+    int16_t i = (voice.counter & 0x0ff0) >> 4;
 
     int16_t out = 0;
+    uint8_t pos = voice.interp_pos;
 
-    out =  ((gaussianTable[0x0FF-i] * (voices[voice].old3)) >> 15);
-    out += ((gaussianTable[0x1FF-i] * (voices[voice].old2)) >> 15);
-    out += ((gaussianTable[0x100+i] * (voices[voice].old1)) >> 15);
-    out += ((gaussianTable[0x000+i] * (voices[voice].next_sample)) >> 15);
+    out =  ((gaussianTable[0x0FF-i] * (voice.interp_buffer[(pos + 4 - 3) % 4])) >> 15);
+    out += ((gaussianTable[0x1FF-i] * (voice.interp_buffer[(pos + 4 - 2) % 4])) >> 15);
+    out += ((gaussianTable[0x100+i] * (voice.interp_buffer[(pos + 4 - 1) % 4])) >> 15);
+    out += ((gaussianTable[0x000+i] * (voice.interp_buffer[pos])) >> 15);
 
     return out;
 }

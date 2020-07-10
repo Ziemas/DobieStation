@@ -117,10 +117,9 @@ void SPU::switch_block(int voice_id)
     voice.current_addr &= 0x000FFFFF;
     voice.new_block = false;
 
-    voice.old3 = voice.old2;
-    voice.old2 = voice.old1;
-    voice.old1 = voice.next_sample;
-    voice.next_sample = voice.pcm.at(voice.sample_idx);
+
+    voice.interp_buffer[voice.interp_pos] = voice.pcm[voice.sample_idx];
+    voice.interp_pos = (voice.interp_pos + 1) % 4;
 }
 
 stereo_sample SPU::voice_gen_sample(int voice_id)
@@ -182,10 +181,8 @@ stereo_sample SPU::voice_gen_sample(int voice_id)
             switch_block(voice_id);
             continue;
         }
-        voice.old3 = voice.old2;
-        voice.old2 = voice.old1;
-        voice.old1 = voice.next_sample;
-        voice.next_sample = voice.pcm.at(voice.sample_idx);
+        voice.interp_buffer[voice.interp_pos] = voice.pcm[voice.sample_idx];
+        voice.interp_pos = (voice.interp_pos + 1) % 4;
     }
 
 
@@ -1089,10 +1086,7 @@ void SPU::key_on_voice(int v)
     voices[v].new_block = true;
     voices[v].loop_addr_specified = false;
     // Clear previous sample data here to avoid pops and clicks.
-    voices[v].old3 = 0;
-    voices[v].old2 = 0;
-    voices[v].old1 = 0;
-    voices[v].next_sample = 0;
+    voices[v].interp_buffer = {};
     ENDX &= ~(1 << v);
     voices[v].adsr.set_stage(ADSR::Stage::Attack);
     voices[v].adsr.volume = 0;
