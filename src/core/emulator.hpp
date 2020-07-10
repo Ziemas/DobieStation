@@ -21,6 +21,7 @@
 #include "iop/sio2.hpp"
 #include "iop/spu/spu.hpp"
 #include "iop/firewire.hpp"
+#include "iop/dev9/dev9.hpp"
 
 #include "int128.hpp"
 #include "gs.hpp"
@@ -51,6 +52,7 @@ class Emulator
         Cop0 cp0;
         Cop1 fpu;
         CDVD_Drive cdvd;
+        DEV9 dev9;
         DMAC dmac;
         EmotionEngine cpu;
         EmotionTiming timers;
