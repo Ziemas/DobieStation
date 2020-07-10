@@ -1076,6 +1076,8 @@ uint8_t Emulator::iop_read8(uint32_t address)
         //printf("[IOP] Read8 from $%08X: $%02X\n", address, IOP_RAM[address]);
         return IOP_RAM[address];
     }
+    if (address >= 0x10000000 && address < 0x11000000)
+        return dev9.read8(address);
     if (address >= 0x1FC00000 && address < 0x20000000)
         return BIOS[address & 0x3FFFFF];
     switch (address)
@@ -1133,6 +1135,8 @@ uint16_t Emulator::iop_read16(uint32_t address)
 {
     if (address < 0x00200000)
         return *(uint16_t*)&IOP_RAM[address];
+    if (address >= 0x10000000 && address < 0x11000000)
+        return dev9.read16(address);
     if (address >= 0x1FC00000 && address < 0x20000000)
         return *(uint16_t*)&BIOS[address & 0x3FFFFF];
     if (address >= 0x1F900000 && address < 0x1F900400)
@@ -1159,6 +1163,8 @@ uint16_t Emulator::iop_read16(uint32_t address)
             return iop_timers.read_control(2);
         case 0x1F801128:
             return iop_timers.read_target(2);
+        case 0x1F80146E:
+            return dev9.read16(address);
         case 0x1F801480:
             return iop_timers.read_counter(3) & 0xFFFF;
         case 0x1F801482:
@@ -1200,6 +1206,8 @@ uint32_t Emulator::iop_read32(uint32_t address)
 {
     if (address < 0x00200000)
         return *(uint32_t*)&IOP_RAM[address];
+    if (address >= 0x10000000 && address < 0x11000000)
+        return dev9.read32(address);
     if (address >= 0x1FC00000 && address < 0x20000000)
         return *(uint32_t*)&BIOS[address & 0x3FFFFF];
     if (address >= 0x1F808400 && address < 0x1F808550)
@@ -1314,6 +1322,11 @@ void Emulator::iop_write8(uint32_t address, uint8_t value)
         IOP_RAM[address] = value;
         return;
     }
+    if (address >= 0x10000000 && address < 0x11000000)
+    {
+        dev9.write8(address, value);
+        return;
+    }
     switch (address)
     {
         case 0x1F402004:
@@ -1367,6 +1380,11 @@ void Emulator::iop_write16(uint32_t address, uint16_t value)
     {
         //printf("[IOP] Write16 to $%08X of $%08X\n", address, value);
         *(uint16_t*)&IOP_RAM[address] = value;
+        return;
+    }
+    if (address >= 0x10000000 && address < 0x11000000)
+    {
+        dev9.write16(address, value);
         return;
     }
     if ((address >= 0x1F900000 && address < 0x1F900400) || (address >= 0x1F900760 && address < 0x1F900788))
@@ -1495,6 +1513,11 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
     {
         //printf("[IOP] Write to $%08X of $%08X\n", address, value);
         *(uint32_t*)&IOP_RAM[address] = value;
+        return;
+    }
+    if (address >= 0x10000000 && address < 0x11000000)
+    {
+        dev9.write32(address, value);
         return;
     }
     //SIO2 send buffers
