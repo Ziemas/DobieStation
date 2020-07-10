@@ -3,16 +3,13 @@
 
 #include <cstdint>
 
-#define DEV9_IDENT 0x32
+#define SPEED_CHIP_VER 0x0011
 
 #define SPD_REGBASE 0x10000000
 #define SMAP_REGBASE (SPD_REGBASE + 0x100)
 #define FLASH_REGBASE 0x10004800
 
 #define SPD_REG(offset) (SPD_REGBASE + (offset))
-//#define SPD_REG8(offset) (uint16_t)(SPD_REGBASE + (offset))
-//#define SPD_REG16(offset) (uint16_t)(SPD_REGBASE + (offset))
-//#define SPD_REG32(offset) (uint16_t)(SPD_REGBASE + (offset))
 
 #define SPD_CAPS_SMAP (1 << 0)
 #define SPD_CAPS_ATA (1 << 1)
@@ -31,11 +28,20 @@
 #define SPD_R_REV_3 0x04
 #define SPD_R_REV_8 0x0e
 
+#define DEV9_R_POWER 0x1F80146C
+#define DEV9_R_REV 0x1F80146E
+
 class DEV9
 {
     private:
         uint16_t irq_stat = 0;
         uint16_t irq_mask = 0;
+
+        enum DEV9_TYPE
+        {
+            PCMCIA = 0x20,
+            EXPBAY = 0x30,
+        };
 
     public:
         uint8_t read8(uint32_t address);

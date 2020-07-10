@@ -1096,6 +1096,8 @@ uint8_t Emulator::iop_read8(uint32_t address)
         return dev9.read8(address);
     if (address >= 0x1FC00000 && address < 0x20000000)
         return BIOS[address & 0x3FFFFF];
+    if (address >= 0x1F80146E && address < 0x1F801480)
+        return dev9.read8(address);
     switch (address)
     {
         case 0x1F402004:
@@ -1159,6 +1161,8 @@ uint16_t Emulator::iop_read16(uint32_t address)
         return spu.read16(address);
     if (address >= 0x1F900400 && address < 0x1F900800)
         return spu2.read16(address);
+    if (address >= 0x1F80146E && address < 0x1F801480)
+        return dev9.read16(address);
     switch (address)
     {
         case 0x1F801100:
@@ -1179,8 +1183,6 @@ uint16_t Emulator::iop_read16(uint32_t address)
             return iop_timers.read_control(2);
         case 0x1F801128:
             return iop_timers.read_target(2);
-        case 0x1F80146E:
-            return dev9.read16(address);
         case 0x1F801480:
             return iop_timers.read_counter(3) & 0xFFFF;
         case 0x1F801482:
@@ -1228,6 +1230,8 @@ uint32_t Emulator::iop_read32(uint32_t address)
         return *(uint32_t*)&BIOS[address & 0x3FFFFF];
     if (address >= 0x1F808400 && address < 0x1F808550)
         return firewire.read32(address);
+    if (address >= 0x1F80146E && address < 0x1F801480)
+        return dev9.read32(address);
     switch (address)
     {
         case 0x1D000000:
@@ -1343,6 +1347,11 @@ void Emulator::iop_write8(uint32_t address, uint8_t value)
         dev9.write8(address, value);
         return;
     }
+    if (address >= 0x1F80146E && address < 0x1F801480)
+    {
+        dev9.write8(address, value);
+        return;
+    }
     switch (address)
     {
         case 0x1F402004:
@@ -1411,6 +1420,11 @@ void Emulator::iop_write16(uint32_t address, uint16_t value)
     if (address >= 0x1F900400 && address < 0x1F900800)
     {
         spu2.write16(address, value);
+        return;
+    }
+    if (address >= 0x1F80146E && address < 0x1F801480)
+    {
+        dev9.write16(address, value);
         return;
     }
     switch (address)
@@ -1555,6 +1569,11 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
     if (address >= 0x1F808400 && address < 0x1F808550)
     {
         firewire.write32(address, value);
+        return;
+    }
+    if (address >= 0x1F80146E && address < 0x1F801480)
+    {
+        dev9.write32(address, value);
         return;
     }
     switch (address)

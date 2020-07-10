@@ -5,7 +5,7 @@ uint8_t DEV9::read8(uint32_t address)
 {
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
-      //printf("[DEV9] Read16 unrecognized SMAP reg\n");
+      printf("[DEV9] Read8 unrecognized SMAP reg %04x\n", address);
       // SMAP
       return 0;
     }
@@ -31,21 +31,26 @@ uint16_t DEV9::read16(uint32_t address)
 {
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
-      //printf("[DEV9] Read16 unrecognized SMAP reg\n");
+      printf("[DEV9] Read16 unrecognized SMAP reg %04x\n", address);
       // SMAP
       return 0;
     }
     switch (address)
     {
-        case 0x1F80146E:
+        case DEV9_R_REV:
         {
-            printf("[DEV9] Read ident magic\n");
-            return DEV9_IDENT; // magic number
+            printf("[DEV9] Read DEV9 type\n");
+            return DEV9_TYPE::EXPBAY;
+        }
+        case DEV9_R_POWER:
+        {
+            printf("[DEV9] Read DEV9 R_POWER\n");
+            return 0;
         }
         case SPD_REG(SPD_R_REV_1):
         {
-            printf("[DEV9] Read magic number the second coming\n");
-            return 0x0011; // magic number
+            printf("[DEV9] Read speed chip version\n");
+            return SPEED_CHIP_VER;
         }
         case SPD_REG(SPD_R_REV_3):
         {
@@ -72,7 +77,7 @@ uint32_t DEV9::read32(uint32_t address)
 {
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
-      //printf("[DEV9] Read16 unrecognized SMAP reg\n");
+      printf("[DEV9] Read32 unrecognized SMAP reg %04x\n", address);
       // SMAP
       return 0;
     }
