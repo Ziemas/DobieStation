@@ -225,6 +225,9 @@
     <ClCompile Include="scheduler.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="iop\dev9\dev9.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="iop\firewire.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -438,6 +441,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="iop\iop_intc.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="iop\dev9\dev9.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="iop\spu\spu.hpp">
