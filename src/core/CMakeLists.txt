@@ -75,6 +75,7 @@ set(SOURCES
     iop/cdvd/iso_reader.cpp
     iop/cdvd/chd_reader.cpp
     iop/dev9/dev9.cpp
+    iop/dev9/smap.cpp
     iop/firewire.cpp
     iop/gamepad.cpp
     iop/iop.cpp
