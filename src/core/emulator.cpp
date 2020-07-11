@@ -43,6 +43,7 @@ Emulator::Emulator() :
     cdvd(&iop_intc, &iop_dma, &scheduler),
     cp0(&dmac),
     cpu(&cp0, &fpu, this, &sif, &vu0, &vu1),
+    dev9(&iop_intc),
     dmac(&cpu, this, &gif, &ipu, &sif, &vif0, &vif1, &vu0, &vu1),
     gif(&gs, &dmac),
     gs(&intc),
@@ -177,6 +178,7 @@ void Emulator::reset()
     cp0.init_mem_pointers(RDRAM, BIOS, (uint8_t*)&scratchpad);
     cpu.reset();
     cpu.init_tlb();
+    dev9.reset();
     dmac.reset(RDRAM, (uint8_t*)&scratchpad);
     firewire.reset();
     fpu.reset();
@@ -1080,7 +1082,7 @@ uint8_t Emulator::iop_read8(uint32_t address)
         return dev9.read8(address);
     if (address >= 0x1FC00000 && address < 0x20000000)
         return BIOS[address & 0x3FFFFF];
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
         return dev9.read8(address);
     switch (address)
     {
@@ -1088,8 +1090,12 @@ uint8_t Emulator::iop_read8(uint32_t address)
             return cdvd.read_N_command();
         case 0x1F402005:
             return cdvd.read_N_status();
+        case 0x1F402006:
+            return 0; // ERRROR
         case 0x1F402008:
             return cdvd.read_ISTAT();
+        case 0x1F40200B:
+            return 0; // cd-tray closed
         case 0x1F40200A:
             return cdvd.read_drive_status();
         case 0x1F40200F:
@@ -1145,7 +1151,7 @@ uint16_t Emulator::iop_read16(uint32_t address)
         return spu.read16(address);
     if (address >= 0x1F900400 && address < 0x1F900800)
         return spu2.read16(address);
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
         return dev9.read16(address);
     switch (address)
     {
@@ -1214,7 +1220,7 @@ uint32_t Emulator::iop_read32(uint32_t address)
         return *(uint32_t*)&BIOS[address & 0x3FFFFF];
     if (address >= 0x1F808400 && address < 0x1F808550)
         return firewire.read32(address);
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
         return dev9.read32(address);
     switch (address)
     {
@@ -1331,7 +1337,7 @@ void Emulator::iop_write8(uint32_t address, uint8_t value)
         dev9.write8(address, value);
         return;
     }
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
     {
         dev9.write8(address, value);
         return;
@@ -1406,7 +1412,7 @@ void Emulator::iop_write16(uint32_t address, uint16_t value)
         spu2.write16(address, value);
         return;
     }
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
     {
         dev9.write16(address, value);
         return;
@@ -1555,7 +1561,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
         firewire.write32(address, value);
         return;
     }
-    if (address >= 0x1F80146E && address < 0x1F801480)
+    if (address >= 0x1F801460 && address < 0x1F801480)
     {
         dev9.write32(address, value);
         return;

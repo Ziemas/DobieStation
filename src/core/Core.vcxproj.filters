@@ -228,6 +228,9 @@
     <ClCompile Include="iop\dev9\dev9.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="iop\dev9\smap.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="iop\firewire.cpp">
       <Filter>Source</Filter>
     </ClCompile>

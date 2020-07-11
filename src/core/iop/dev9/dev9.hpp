@@ -31,19 +31,32 @@
 #define DEV9_R_POWER 0x1F80146C
 #define DEV9_R_REV 0x1F80146E
 
+class IOP_INTC;
+
 class DEV9
 {
     private:
+        IOP_INTC* intc;
+
+        bool connected = 1;
+
         uint16_t irq_stat = 0;
         uint16_t irq_mask = 0;
+        uint16_t power = 0x4;
+        uint16_t spd_caps = SPD_CAPS_SMAP;
 
-        enum DEV9_TYPE
+        enum class DEV9_TYPE
         {
             PCMCIA = 0x20,
             EXPBAY = 0x30,
         };
 
+
     public:
+        DEV9(IOP_INTC* intc);
+
+        void reset();
+
         uint8_t read8(uint32_t address);
         uint16_t read16(uint32_t address);
         uint32_t read32(uint32_t address);

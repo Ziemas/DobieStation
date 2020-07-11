@@ -139,6 +139,7 @@
     <ClCompile Include="sif.cpp" />
     <ClCompile Include="iop\sio2.cpp" />
     <ClCompile Include="iop\dev9\dev9.cpp" />
+    <ClCompile Include="iop\dev9\smap.cpp" />
     <ClCompile Include="iop\spu\spu.cpp" />
     <ClCompile Include="iop\spu\spu_adpcm.cpp" />
     <ClCompile Include="iop\spu\spu_envelope.cpp" />

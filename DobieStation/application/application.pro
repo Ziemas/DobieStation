@@ -57,6 +57,7 @@ SOURCES += ../../src/qt/main.cpp \
     ../../src/core/ee/vu.cpp \
     ../../src/core/ee/emotion_vu0.cpp \
     ../../src/core/iop/dev9/dev9.cpp \
+    ../../src/core/iop/dev9/smap.cpp \
     ../../src/core/iop/firewire.cpp \
     ../../src/core/iop/gamepad.cpp \
     ../../src/core/iop/spu/spu.cpp \
