@@ -14,25 +14,22 @@ std::array<uint8_t, 64> eeprom = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
+// TBH this is probably not part of the eeprom, but some enable to access it from SPD
 void EEPROM::set_dir(uint8_t value)
 {
     printf("[DEV9] [EEPROM] write PIO_DIR: %02x\n", value);
-    direction = (value >> 4) & 3;
-    sequence = 0;
-    address = 0;
-    state = 0;
-    clock = 0;
+    pio_dir = (value >> 4) & 3;
 }
 
 uint8_t EEPROM::get_dir()
 {
-    printf("[DEV9] [EEPROM] read PIO_DIR: %02x\n", direction);
-    return direction;
+    printf("[DEV9] [EEPROM] read PIO_DIR: %02x\n", pio_dir);
+    return pio_dir;
 }
 
 void EEPROM::step()
 {
-    uint8_t line = (latch >> 5) & 1;
+    uint8_t line = (data >> 5) & 1;
     printf("eeprom clock state: %d, command: %d, sequence %d\n", state, command, sequence);
     switch (state)
     {
@@ -48,24 +45,38 @@ void EEPROM::step()
             break;
         case READ_ADDRESS:
             address |= line << (5 - sequence);
-            // TODO
+            // TODO: need to use brain to figure out what the correct thing is
             //address = (address & (63 ^ (1 << sequence))) | ((line >> sequence) & (0x20 >> sequence));
+            //dev9.eeprom_address =
+            //    (dev9.eeprom_address & (63 ^ (1 << sequence))) |
+            //    ((value >> sequence) & (0x20 >> sequence)));
+
             sequence++;
             if (sequence == 6)
             {
                 printf("eeprom addr %x\n", address);
-                state = TRANSMIT;
+                state = ACK;
                 sequence = 0;
             }
             break;
+        case ACK:
+            printf("eeprom ack\n");
+            data = 0;
+            sequence = 0;
+            state = TRANSMIT;
+            break;
         case TRANSMIT:
-            // TODO
+            // TODO: this is possibly correct?
             if (command == READ)
-                latch = ((eeprom[address] << sequence) & 0x8000) >> 11;
+                data = ((eeprom[address] << sequence) & 0x8000) >> 11;
 
-            // TODO
+            // TODO: figure this out
             if (command == WRITE)
             {
+                //dev9.eeprom[dev9.eeprom_address] =
+                //    (dev9.eeprom[dev9.eeprom_address] & (63 ^ (1 << dev9.eeprom_bit))) |
+                //    ((value >> dev9.eeprom_bit) & (0x8000 >> dev9.eeprom_bit));
+                //
                 // eeprom[address] = (eeprom[address] & (63 ^ (1 << bit))) | ((bit) & (0x8000 >> bit));
             }
 
@@ -84,9 +95,19 @@ void EEPROM::step()
 void EEPROM::write(uint8_t value)
 {
     printf("[DEV9] [EEPROM] Write PIO_DATA %02x\n", value);
+    uint8_t enable = (value >> 7) & 1;
     uint8_t new_clock = (value >> 6) & 1;
 
-    latch = value;
+    if (enable == 0)
+    {
+        sequence = 0;
+        address = 0;
+        state = 0;
+        clock = 0;
+        return;
+    }
+
+    data = value;
     if (new_clock == 1)
     {
         // The eeprom works on the rising clock edge
@@ -101,6 +122,6 @@ void EEPROM::write(uint8_t value)
 
 uint8_t EEPROM::read()
 {
-    printf("[DEV9] [EEPROM] Read PIO_DATA %02x\n", latch);
-    return latch;
+    printf("[DEV9] [EEPROM] Read PIO_DATA %02x\n", data);
+    return data;
 }

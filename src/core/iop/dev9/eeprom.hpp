@@ -2,9 +2,12 @@
 #define __EEPROM_H_
 #include <cstdint>
 
-/*  eeprom on network adapter, stores the MAC address.
+/*  EEPROM on network adapter, stores the MAC address.
  *  This is a serial eeprom, you control it using the enable
- *  the clock and a single data line */
+ *  the clock and a single data line
+ *
+ *  Doesn't seem to be one of the common protocols.
+ *  */
 
 /* the 3 most significant bits of the rigest represents:
  *         __________________________________________________________
@@ -17,8 +20,7 @@
  *
  *        ... you get the idea, but maybe not exactly like this sketch
  *
- *        2 bits representing the command followed by
- *        6 bits representing the address and then the data
+ *        2 command bits bits -> 6 address bits -> one bit skipped -> data
  *
  *        once the address has been set you can fire away,
  *        the address automatically increments
@@ -36,6 +38,7 @@ class EEPROM
         {
             READ_COMMAND = 0,
             READ_ADDRESS,
+            ACK,
             TRANSMIT,
         };
 
@@ -47,13 +50,18 @@ class EEPROM
             READ = 3,
         };
 
+        // Pins
+        uint8_t clock = 0;
+        uint8_t data = 0;
+
+        // Internal state
         uint8_t state = READ_COMMAND;
-        uint8_t direction = 0;
         uint8_t command = 0;
         uint8_t sequence = 0;
         uint8_t address = 0;
-        uint8_t clock = 0;
-        uint8_t latch = 0;
+
+        // This is probably not part of the eeprom?
+        uint8_t pio_dir = 0;
 
         void step();
     public:
