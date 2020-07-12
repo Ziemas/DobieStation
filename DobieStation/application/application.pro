@@ -57,6 +57,7 @@ SOURCES += ../../src/qt/main.cpp \
     ../../src/core/ee/vu.cpp \
     ../../src/core/ee/emotion_vu0.cpp \
     ../../src/core/iop/dev9/dev9.cpp \
+    ../../src/core/iop/dev9/eeprom.cpp \
     ../../src/core/iop/dev9/smap.cpp \
     ../../src/core/iop/firewire.cpp \
     ../../src/core/iop/gamepad.cpp \
@@ -144,6 +145,7 @@ HEADERS += \
     ../../src/core/iop/sio2.hpp \
     ../../src/core/ee/vu.hpp \
     ../../src/core/iop/dev9/dev9.hpp \
+    ../../src/core/iop/dev9/eeprom.hpp \
     ../../src/core/iop/firewire.hpp \
     ../../src/core/iop/gamepad.hpp \
     ../../src/core/iop/spu/spu.hpp \

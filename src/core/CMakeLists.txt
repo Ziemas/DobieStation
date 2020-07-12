@@ -73,6 +73,7 @@ set(SOURCES
     iop/cdvd/cdvd.cpp
     iop/cdvd/cso_reader.cpp
     iop/cdvd/iso_reader.cpp
+    iop/dev9/eeprom.cpp
     iop/dev9/dev9.cpp
     iop/dev9/smap.cpp
     iop/firewire.cpp
@@ -157,6 +158,7 @@ set(HEADERS
     iop/cdvd/cdvd.hpp
     iop/cdvd/cso_reader.hpp
     iop/cdvd/iso_reader.hpp
+    iop/dev9/eeprom.hpp
     iop/dev9/dev9.hpp
     iop/firewire.hpp
     iop/gamepad.hpp

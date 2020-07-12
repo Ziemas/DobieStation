@@ -139,6 +139,7 @@
     <ClCompile Include="sif.cpp" />
     <ClCompile Include="iop\sio2.cpp" />
     <ClCompile Include="iop\dev9\dev9.cpp" />
+    <ClCompile Include="iop\dev9\eeprom.cpp" />
     <ClCompile Include="iop\dev9\smap.cpp" />
     <ClCompile Include="iop\spu\spu.cpp" />
     <ClCompile Include="iop\spu\spu_adpcm.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="sif.hpp" />
     <ClInclude Include="iop\sio2.hpp" />
     <ClInclude Include="iop\dev9\dev9.hpp" />
+    <ClInclude Include="iop\dev9\eeprom.hpp" />
     <ClInclude Include="iop\spu\spu.hpp" />
     <ClInclude Include="iop\spu\ps_adpcm.hpp" />
     <ClInclude Include="iop\spu\spu_envelope.hpp" />

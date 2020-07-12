@@ -228,6 +228,9 @@
     <ClCompile Include="iop\dev9\dev9.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="iop\dev9\eeprom.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
     <ClCompile Include="iop\dev9\smap.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -447,6 +450,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="iop\dev9\dev9.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="iop\dev9\eeprom.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="iop\spu\spu.hpp">

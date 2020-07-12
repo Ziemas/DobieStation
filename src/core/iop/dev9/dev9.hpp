@@ -2,6 +2,8 @@
 #define __DEV9_H_
 
 #include <cstdint>
+#include "eeprom.hpp"
+
 
 #define SPEED_CHIP_VER 0x0011
 
@@ -32,11 +34,13 @@
 #define DEV9_R_REV 0x1F80146E
 
 class IOP_INTC;
+class EEPROM;
 
 class DEV9
 {
     private:
         IOP_INTC* intc;
+        EEPROM eeprom;
 
         bool connected = 1;
 
