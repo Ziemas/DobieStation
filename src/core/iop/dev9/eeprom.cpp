@@ -2,7 +2,8 @@
 #include <cstdio>
 #include <array>
 
-std::array<uint8_t, 64> eeprom = {
+//std::array<uint8_t, 64> eeprom = {
+uint8_t hardcoded_eeprom[] = {
     //0x6D, 0x76, 0x63, 0x61, 0x31, 0x30, 0x08, 0x01,
     0x76, 0x6D, 0x61, 0x63, 0x30, 0x31, 0x07, 0x02,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -13,6 +14,14 @@ std::array<uint8_t, 64> eeprom = {
     0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
+
+EEPROM::EEPROM(uint16_t* eeprom_data) : eeprom(eeprom_data)
+{
+    if (eeprom == nullptr)
+    {
+        eeprom = (uint16_t*)hardcoded_eeprom;
+    }
+}
 
 void EEPROM::step()
 {
@@ -53,14 +62,13 @@ void EEPROM::step()
             state = TRANSMIT;
             break;
         case TRANSMIT:
-            // TODO: this is possibly correct?
-            // 8 bits of nothing and then the data bit?
             if (command == READ)
                 data = ((eeprom[address] << sequence) & 0x8000) >> 11;
 
             // TODO: figure this out
             if (command == WRITE)
             {
+                //eeprom[address] = eeprom[address] | (line << (15 - sequence));
                 //dev9.eeprom[dev9.eeprom_address] =
                 //    (dev9.eeprom[dev9.eeprom_address] & (63 ^ (1 << dev9.eeprom_bit))) |
                 //    ((value >> dev9.eeprom_bit) & (0x8000 >> dev9.eeprom_bit));
@@ -71,9 +79,9 @@ void EEPROM::step()
             sequence++;
             if (sequence == 16)
             {
+                printf("eeprom transmit advanced addres to [%x] value read was %04x\n", address, eeprom[address]);
                 sequence = 0;
                 address++;
-                printf("eeprom transmit advanced address to [%x] value there is %02x\n", address, eeprom[address]);
             }
             break;
     }

@@ -1,13 +1,14 @@
 #include "dev9.hpp"
 #include <cstdio>
 
-DEV9::DEV9(IOP_INTC* intc) : intc(intc) {}
+DEV9::DEV9(IOP_INTC* intc) : intc(intc), eeprom(nullptr)
+{}
 
 void DEV9::reset()
 {
-    eeprom = {};
     irq_mask = 0;
     irq_stat = 0;
+    eeprom = EEPROM(nullptr);
 }
 
 uint8_t DEV9::read8(uint32_t address)
@@ -170,7 +171,6 @@ void DEV9::write32(uint32_t address, uint32_t value)
     }
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] Unrecognized SMAP write32 to $%08x of %08x\n", address, value);
         smap.write32(address, value);
         return;
     }
