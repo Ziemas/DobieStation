@@ -60,13 +60,8 @@ class EEPROM
         uint8_t sequence = 0;
         uint8_t address = 0;
 
-        // This is probably not part of the eeprom?
-        uint8_t pio_dir = 0;
-
         void step();
     public:
-        void set_dir(uint8_t direction);
-        uint8_t get_dir();
         void write(uint8_t cmd);
         uint8_t read();
 

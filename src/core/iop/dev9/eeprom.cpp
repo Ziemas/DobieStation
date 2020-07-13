@@ -14,19 +14,6 @@ std::array<uint8_t, 64> eeprom = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-// TBH this is probably not part of the eeprom, but some enable to access it from SPD
-void EEPROM::set_dir(uint8_t value)
-{
-    printf("[DEV9] [EEPROM] write PIO_DIR: %02x\n", value);
-    pio_dir = (value >> 4) & 3;
-}
-
-uint8_t EEPROM::get_dir()
-{
-    printf("[DEV9] [EEPROM] read PIO_DIR: %02x\n", pio_dir);
-    return pio_dir;
-}
-
 void EEPROM::step()
 {
     uint8_t line = (data >> 5) & 1;
