@@ -9,14 +9,15 @@
  *  Doesn't seem to be one of the common protocols.
  *  */
 
-/* the 3 most significant bits of the rigest represents:
- *         __________________________________________________________
- * enable /                                                          \
- *          __    __    __    __    __    __    __    __    __    __
- * clock   /  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \
- *          _____    ______
- * data    /     \__/      \___________
- *          1     0     1     0
+/* the 3 most significant bits of the pio data register represents:
+ *         __________|___________________________________|_____|____________
+ * enable /          |                                   |     |
+ *          __    __ |  __    __    __    __    __    __ |  __ |  __    __
+ * clock   /  \__/  \|_/  \__/  \__/  \__/  \__/  \__/  \|_/  \|_/  \__/  \
+ *          ________ |                                   |     |  _______
+ * data    /        \|___________________________________|_____|_/       \__
+ *           1    1  |  0     0     0     0     0     0  |     |   1     1
+ *             cmd                    addr                wait      data
  *
  *        ... you get the idea, but maybe not exactly like this sketch
  *
