@@ -160,6 +160,7 @@ set(HEADERS
     iop/cdvd/iso_reader.hpp
     iop/dev9/eeprom.hpp
     iop/dev9/dev9.hpp
+    iop/dev9/smap.hpp
     iop/firewire.hpp
     iop/gamepad.hpp
     iop/iop.hpp

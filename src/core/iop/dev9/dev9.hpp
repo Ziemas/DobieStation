@@ -3,12 +3,12 @@
 
 #include <cstdint>
 #include "eeprom.hpp"
+#include "smap.hpp"
 
 
 #define SPEED_CHIP_VER 0x0011
 
 #define SPD_REGBASE 0x10000000
-#define SMAP_REGBASE (SPD_REGBASE + 0x100)
 #define FLASH_REGBASE 0x10004800
 
 #define SPD_REG(offset) (SPD_REGBASE + (offset))
@@ -34,13 +34,13 @@
 #define DEV9_R_REV 0x1F80146E
 
 class IOP_INTC;
-class EEPROM;
 
 class DEV9
 {
     private:
         IOP_INTC* intc;
-        EEPROM eeprom;
+        EEPROM eeprom = {};
+        SMAP smap = {};
 
         bool connected = 1;
 
@@ -51,9 +51,11 @@ class DEV9
 
         // Top nibble set to 0xE when accessing eeprom
         // LSB set to 1 when accessing LED
-        uint8_t pio_dir;
+        // maybe for masking pio_data bits.
+        uint8_t pio_dir = 0;
 
-        bool led;
+        // Status LED on network adapter
+        bool led = false;
 
 
         enum class DEV9_TYPE

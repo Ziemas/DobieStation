@@ -455,6 +455,9 @@
     <ClInclude Include="iop\dev9\eeprom.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="iop\dev9\smap.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
     <ClInclude Include="iop\spu\spu.hpp">
       <Filter>Headers</Filter>
     </ClInclude>

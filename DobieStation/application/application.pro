@@ -146,6 +146,7 @@ HEADERS += \
     ../../src/core/ee/vu.hpp \
     ../../src/core/iop/dev9/dev9.hpp \
     ../../src/core/iop/dev9/eeprom.hpp \
+    ../../src/core/iop/dev9/smap.hpp \
     ../../src/core/iop/firewire.hpp \
     ../../src/core/iop/gamepad.hpp \
     ../../src/core/iop/spu/spu.hpp \

@@ -30,8 +30,7 @@ uint8_t DEV9::read8(uint32_t address)
     }
     if (address >= SMAP_REGBASE && address < FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] unrecognized read8 from %08x\n", address);
-        return 0;
+        return smap.read8(address);
     }
 
     printf("Unrecognized DEV9 read8 from $%08x\n", address);
@@ -67,9 +66,7 @@ uint16_t DEV9::read16(uint32_t address)
 
     if (address >= SMAP_REGBASE && address < FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] Unrecognized read 16 from %08x\n", address);
-        // SMAP
-        return 0;
+        return smap.read16(address);
     }
 
     switch (address)
@@ -99,8 +96,7 @@ uint32_t DEV9::read32(uint32_t address)
     }
     if (address >= SMAP_REGBASE && address < FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] Read32 unrecognized SMAP reg %08x\n", address);
-        return 0;
+        return smap.read32(address);
     }
 
     printf("[DEV9] Unrecognized read32 from $%08x\n", address);
@@ -131,12 +127,13 @@ void DEV9::write8(uint32_t address, uint8_t value)
 
     if (address >= SMAP_REGBASE && address < FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] Unrecognized write8 to $%08x of %02x\n", address, value);
+        smap.write8(address, value);
         return;
     }
 
 
     printf("[DEV0] Unrecognized DEV9 write8 to $%08x of $%02x\n", address, value);
+    printf("break here\n");
 }
 
 void DEV9::write16(uint32_t address, uint16_t value)
@@ -157,7 +154,7 @@ void DEV9::write16(uint32_t address, uint16_t value)
 
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
-        printf("[DEV9] [SMAP] Unrecognized SMAP write16 to $%08x of %04x\n", address, value);
+        smap.write16(address, value);
         return;
     }
 
@@ -174,6 +171,7 @@ void DEV9::write32(uint32_t address, uint32_t value)
     if (address >= SMAP_REGBASE && address <= FLASH_REGBASE)
     {
         printf("[DEV9] [SMAP] Unrecognized SMAP write32 to $%08x of %08x\n", address, value);
+        smap.write32(address, value);
         return;
     }
     printf("[DEV9] Unrecognized DEV9 write32 to $%08x of $%08x\n", address, value);

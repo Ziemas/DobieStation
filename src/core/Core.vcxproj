@@ -216,6 +216,7 @@
     <ClInclude Include="iop\sio2.hpp" />
     <ClInclude Include="iop\dev9\dev9.hpp" />
     <ClInclude Include="iop\dev9\eeprom.hpp" />
+    <ClInclude Include="iop\dev9\smap.hpp" />
     <ClInclude Include="iop\spu\spu.hpp" />
     <ClInclude Include="iop\spu\ps_adpcm.hpp" />
     <ClInclude Include="iop\spu\spu_envelope.hpp" />

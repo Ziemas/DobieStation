@@ -54,6 +54,7 @@ void EEPROM::step()
             break;
         case TRANSMIT:
             // TODO: this is possibly correct?
+            // 8 bits of nothing and then the data bit?
             if (command == READ)
                 data = ((eeprom[address] << sequence) & 0x8000) >> 11;
 
