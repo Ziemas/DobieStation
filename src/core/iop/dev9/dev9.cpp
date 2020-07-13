@@ -17,8 +17,8 @@ uint8_t DEV9::read8(uint32_t address)
         switch (address)
         {
             case SPD_REG(SPD_R_PIO_DIR):
-                printf("[DEV9] [SPD] Read8 PIO_DIR: %02x\n ", eeprom.get_dir());
-                return eeprom.get_dir();
+                printf("[DEV9] [SPD] Read8 PIO_DIR: %02x\n ", pio_dir);
+                return pio_dir;
 
             // Writing to PIO_DATA apparently also toggles the LED on the network adapter?
             case SPD_REG(SPD_R_PIO_DATA):
@@ -115,11 +115,13 @@ void DEV9::write8(uint32_t address, uint8_t value)
         {
             case SPD_REG(SPD_R_PIO_DIR):
                 printf("[DEV9] [SPD] Write8 PIO_DIR: %02x\n", value);
-                eeprom.set_dir(value);
+                pio_dir = value;
                 return;
 
             case SPD_REG(SPD_R_PIO_DATA):
-                eeprom.write(value);
+                if ((pio_dir & 0xE0) == 0xE0)
+                    eeprom.write(value);
+                led = value & 1;
                 return;
         }
 

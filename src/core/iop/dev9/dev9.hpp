@@ -49,6 +49,13 @@ class DEV9
         uint16_t power = 0x4;
         uint16_t spd_caps = SPD_CAPS_SMAP;
 
+        // Top nibble set to 0xE when accessing eeprom
+        // LSB set to 1 when accessing LED
+        uint8_t pio_dir;
+
+        bool led;
+
+
         enum class DEV9_TYPE
         {
             PCMCIA = 0x20,
