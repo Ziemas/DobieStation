@@ -39,7 +39,7 @@ class DEV9
 {
     private:
         IOP_INTC* intc;
-        EEPROM eeprom = {};
+        EEPROM eeprom;
         SMAP smap = {};
 
         bool connected = 1;

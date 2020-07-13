@@ -59,9 +59,11 @@ class EEPROM
         uint8_t command = 0;
         uint8_t sequence = 0;
         uint8_t address = 0;
+        uint16_t* eeprom;
 
         void step();
     public:
+        EEPROM(uint16_t* eeprom);
         void write(uint8_t cmd);
         uint8_t read();
 
