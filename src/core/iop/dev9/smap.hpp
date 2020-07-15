@@ -24,6 +24,10 @@
 #define SMAP_E3_RXMAC_ENABLE (1<<27)
 #define SMAP_E3_WAKEUP_ENABLE (1<<26)
 
+#define SMAP_BD_REGBASE 0x2f00
+#define SMAP_BD_TX_BASE (SMAP_BD_REGBASE + 0x0000)
+#define SMAP_BD_RX_BASE (SMAP_BD_REGBASE + 0x0200)
+
 struct smap_bd
 {
     uint16_t ctrl_stat;
@@ -39,14 +43,29 @@ class SMAP
     private:
         enum CTRL
         {
-            CTRL_RESET = 1,
+            CTRL_RESET = 0x1,
+            CTRL_DMA_ENABLE= 0x2,
         };
 
         uint8_t bd_mode;
         uint32_t emac3_mode0;
+        uint32_t mac_address;
 
         // 64 buffer descriptors, 512 kb
-        smap_bd bd[64] = {};
+        smap_bd rx_bd[64] = {};
+        smap_bd tx_bd[64] = {};
+
+        uint32_t rx_bd_index = 0;
+        // Seems big... 4kb on ppc405gp emac
+        uint8_t rxfifo[16*1024] = {};
+        uint16_t rxfifo_write_ptr = 0;
+
+        uint32_t tx_bd_index = 0;
+        // Seems big... 2kb on ppc405gp emac
+        uint8_t txfifo[16*1024] = {};
+        uint16_t txfifo_write_ptr = 0;
+
+        //uint8_t bd[512];
 
         uint8_t txfifo_ctrl = 0;
         uint8_t rxfifo_ctrl = 0;
