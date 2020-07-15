@@ -46,6 +46,8 @@ class DEV9
 
         uint16_t irq_stat = 0;
         uint16_t irq_mask = 0;
+
+        // Claim to be powered up
         uint16_t power = 0x4;
         uint16_t spd_caps = SPD_CAPS_SMAP;
 

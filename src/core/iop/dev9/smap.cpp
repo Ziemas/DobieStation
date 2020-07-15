@@ -62,8 +62,23 @@ void SMAP::write8(uint32_t address, uint8_t value)
 
 void SMAP::write16(uint32_t address, uint16_t value)
 {
+    if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
+    {
+        printf("[DEV9] [SMAP] TX BD Write to %08x of %04x\n", address, value);
+        uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
+        uint16_t* bd = (uint16_t*)tx_bd;
+        bd[index] = value;
+        return;
+    }
+    if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE)+0x200)
+    {
+        printf("[DEV9] [SMAP] RX BD Write to %08x of %04x\n", address, value);
+        uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
+        uint16_t* bd = (uint16_t*)rx_bd;
+        bd[index] = value;
+        return;
+    }
     printf("[DEV9] [SMAP] Unrecognized SMAP write16 to $%08x of %04x\n", address, value);
-
     return;
 }
 
