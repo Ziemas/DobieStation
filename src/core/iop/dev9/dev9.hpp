@@ -1,10 +1,9 @@
 #ifndef __DEV9_H_
 #define __DEV9_H_
 
-#include <cstdint>
 #include "eeprom.hpp"
 #include "smap.hpp"
-
+#include <cstdint>
 
 #define SPEED_CHIP_VER 0x0011
 
@@ -37,49 +36,46 @@ class IOP_INTC;
 
 class DEV9
 {
-    private:
-        IOP_INTC* intc;
-        EEPROM eeprom;
-        SMAP smap = {};
+  private:
+    IOP_INTC* intc;
+    EEPROM eeprom;
+    SMAP smap = {};
 
-        bool connected = 1;
+    bool connected = 1;
 
-        uint16_t irq_stat = 0;
-        uint16_t irq_mask = 0;
+    uint16_t irq_stat = 0;
+    uint16_t irq_mask = 0;
 
-        // Claim to be powered up
-        uint16_t power = 0x4;
-        uint16_t spd_caps = SPD_CAPS_SMAP;
+    // Claim to be powered up
+    uint16_t power = 0x4;
+    uint16_t spd_caps = SPD_CAPS_SMAP;
 
-        // Top nibble set to 0xE when accessing eeprom
-        // LSB set to 1 when accessing LED
-        // maybe for masking pio_data bits.
-        uint8_t pio_dir = 0;
+    // Top nibble set to 0xE when accessing eeprom
+    // LSB set to 1 when accessing LED
+    // maybe for masking pio_data bits.
+    uint8_t pio_dir = 0;
 
-        // Status LED on network adapter
-        bool led = false;
+    // Status LED on network adapter
+    bool led = false;
 
+    enum class DEV9_TYPE
+    {
+        PCMCIA = 0x20,
+        EXPBAY = 0x30,
+    };
 
-        enum class DEV9_TYPE
-        {
-            PCMCIA = 0x20,
-            EXPBAY = 0x30,
-        };
+  public:
+    DEV9(IOP_INTC* intc);
 
+    void reset();
 
-    public:
-        DEV9(IOP_INTC* intc);
+    uint8_t read8(uint32_t address);
+    uint16_t read16(uint32_t address);
+    uint32_t read32(uint32_t address);
 
-        void reset();
-
-        uint8_t read8(uint32_t address);
-        uint16_t read16(uint32_t address);
-        uint32_t read32(uint32_t address);
-
-        void write8(uint32_t address, uint8_t value);
-        void write16(uint32_t address, uint16_t value);
-        void write32(uint32_t address, uint32_t value);
+    void write8(uint32_t address, uint8_t value);
+    void write16(uint32_t address, uint16_t value);
+    void write32(uint32_t address, uint32_t value);
 };
-
 
 #endif // __DEV9_H_

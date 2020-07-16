@@ -34,42 +34,40 @@
 
 class EEPROM
 {
-    private:
-        enum STATE
-        {
-            READ_COMMAND = 0,
-            READ_ADDRESS,
-            ACK,
-            TRANSMIT,
-        };
+  private:
+    enum STATE
+    {
+        READ_COMMAND = 0,
+        READ_ADDRESS,
+        ACK,
+        TRANSMIT,
+    };
 
-        enum COMMAND
-        {
-            unk1 = 0,
-            unk2 = 1,
-            WRITE = 2,
-            READ = 3,
-        };
+    enum COMMAND
+    {
+        unk1 = 0,
+        unk2 = 1,
+        WRITE = 2,
+        READ = 3,
+    };
 
-        // Pins
-        uint8_t clock = 0;
-        uint8_t data = 0;
+    // Pins
+    uint8_t clock = 0;
+    uint8_t data = 0;
 
-        // Internal state
-        uint8_t state = READ_COMMAND;
-        uint8_t command = 0;
-        uint8_t sequence = 0;
-        uint8_t address = 0;
-        uint16_t* eeprom;
+    // Internal state
+    uint8_t state = READ_COMMAND;
+    uint8_t command = 0;
+    uint8_t sequence = 0;
+    uint8_t address = 0;
+    uint16_t* eeprom;
 
-        void step();
-    public:
-        EEPROM(uint16_t* eeprom);
-        void write(uint8_t cmd);
-        uint8_t read();
+    void step();
 
+  public:
+    EEPROM(uint16_t* eeprom);
+    void write(uint8_t cmd);
+    uint8_t read();
 };
-
-
 
 #endif // __EEPROM_H_

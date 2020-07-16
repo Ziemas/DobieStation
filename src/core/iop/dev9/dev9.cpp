@@ -2,7 +2,8 @@
 #include <cstdio>
 
 DEV9::DEV9(IOP_INTC* intc) : intc(intc), eeprom(nullptr)
-{}
+{
+}
 
 void DEV9::reset()
 {
@@ -81,7 +82,6 @@ uint16_t DEV9::read16(uint32_t address)
         case DEV9_R_POWER:
             printf("[DEV9] Read DEV9 R_POWER\n");
             return power;
-
     }
 
     printf("[DEV9] Unrecognized read16 from $%08x\n", address);
@@ -131,7 +131,6 @@ void DEV9::write8(uint32_t address, uint8_t value)
         smap.write8(address, value);
         return;
     }
-
 
     printf("[DEV0] Unrecognized DEV9 write8 to $%08x of $%02x\n", address, value);
     printf("break here\n");
