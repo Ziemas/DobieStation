@@ -119,7 +119,7 @@ void SMAP::write16(uint32_t address, uint16_t value)
         bd[index] = value;
         return;
     }
-    if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE)+0x200)
+    if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
     {
         printf("[DEV9] [SMAP] RX BD Write to %08x of %04x\n", address, value);
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;

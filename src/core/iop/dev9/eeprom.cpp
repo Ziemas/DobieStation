@@ -1,10 +1,11 @@
 #include "eeprom.hpp"
-#include <cstdio>
 #include <array>
+#include <cstdio>
 
 // TODO: lets just take a MAC address string and generate the eeprom content
 // it's just the bytes of the address and a simple checksum (adding 3 shorts together)
 
+// clang-format off
 uint16_t hardcoded_eeprom[32] = {
     0x6D76, 0x6361, 0x3130, 0x0207,
     0x0000, 0x0000, 0x0000, 0x0000,
@@ -15,6 +16,7 @@ uint16_t hardcoded_eeprom[32] = {
     0x1000, 0x0000, 0x0000, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000,
 };
+// clang-format on
 
 EEPROM::EEPROM(uint16_t* eeprom_data) : eeprom(eeprom_data)
 {
@@ -97,7 +99,6 @@ void EEPROM::write(uint8_t value)
         }
     }
     clock = new_clock;
-
 }
 
 uint8_t EEPROM::read()
