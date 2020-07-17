@@ -217,10 +217,65 @@ void SMAP::write32(uint32_t address, uint32_t value)
             emac3_rx_watermark = EMAC3_WSWAP(value);
             return;
         case EMAC3_REG(SMAP_R_EMAC3_STA_CTRL):
-            printf("[DEV9] [SMAP] Write EMAC3_STA_CTRL %08x\n", EMAC3_WSWAP(value));
-            emac3_sta_ctrl = EMAC3_WSWAP(value);
+            write_sta(value);
             return;
     }
     printf("[DEV9] [SMAP] Unrecognized SMAP write32 to $%08x of %08x\n", address, value);
     return;
+}
+
+void SMAP::write_sta(uint32_t reg)
+{
+    uint32_t sta = EMAC3_WSWAP(reg);
+    printf("[DEV9] [SMAP] Write EMAC3_STA_CTRL %08x\n", sta);
+    emac3_sta_ctrl = sta;
+    uint8_t command = (sta >> 12) & 0x3;
+
+    if (command == 0)
+        return;
+
+    uint8_t address = sta & 0x1f;
+    uint16_t data = sta >> 16;
+
+    switch (command)
+    {
+        case 1:
+        {
+            uint16_t response = read_phy(address, data);
+            emac3_sta_ctrl = (emac3_sta_ctrl & 0xFFFF) | (response << 16);
+            break;
+        }
+        case 2:
+            write_phy(address, data);
+            break;
+    }
+
+    emac3_sta_ctrl |= SMAP_E3_PHY_OP_COMP;
+
+    return;
+}
+
+uint16_t SMAP::read_phy(uint8_t address, uint16_t value)
+{
+    switch (address)
+    {
+        case SMAP_DsPHYTER_BMCR: // Basic mode control
+                printf("[DEV9] [SMAP] Read PHY BMCR\n");
+            return 0;
+    }
+    printf("[DEV9] [SMAP] Read from PHY %02x\n", address);
+    return 0;
+}
+
+void SMAP::write_phy(uint8_t address, uint16_t value)
+{
+    switch (address)
+    {
+        case SMAP_DsPHYTER_BMCR: // Basic mode control
+            printf("[DEV9] [SMAP] Write to PHY BMCR of %04x\n", value);
+            if (value == SMAP_PHY_BMCR_RST)
+                printf("[DEV9] [SMAP] PHY Reset\n");
+            return;
+    }
+    printf("[DEV9] [SMAP] Write to PHY %02x of %04x\n", address, value);
 }
