@@ -53,6 +53,7 @@
 #define SMAP_R_EMAC3_INTER_FRAME_GAP 0x58
 
 #define SMAP_R_EMAC3_STA_CTRL 0x5C
+#define SMAP_E3_PHY_OP_COMP (1 << 15)
 
 #define SMAP_R_EMAC3_TX_THRESHOLD 0x60
 #define SMAP_R_EMAC3_RX_WATERMARK 0x64
@@ -63,6 +64,10 @@
 
 // SMAP driver word swaps before writing, swapping backs makes it easier to reason about
 #define EMAC3_WSWAP(val) ((((val) >> 16) & 0xffff) | (((val)&0xffff) << 16))
+
+#define SMAP_DsPHYTER_BMCR 0x00
+#define SMAP_PHY_BMCR_RST (1 << 15)
+#define SMAP_DsPHYTER_BMSR 0x01
 
 struct smap_bd
 {
@@ -122,6 +127,10 @@ class SMAP
 
     uint8_t txfifo_ctrl = 0;
     uint8_t rxfifo_ctrl = 0;
+
+    void write_phy(uint8_t address, uint16_t value);
+    uint16_t read_phy(uint8_t address, uint16_t value);
+    void write_sta(uint32_t reg);
 
   public:
     uint8_t read8(uint32_t address);
