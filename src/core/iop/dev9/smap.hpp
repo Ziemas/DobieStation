@@ -18,6 +18,7 @@
 #define SMAP_R_TXFIFO_DATA 0x1000
 
 #define SMAP_R_RXFIFO_CTRL 0xf30
+#define SMAP_R_RXFIFO_DATA 0x1100
 
 #define SMAP_EMAC3_REGBASE 0x1f00
 #define EMAC3_REG(offset) (SMAP_REGBASE + SMAP_EMAC3_REGBASE + (offset))
@@ -68,6 +69,10 @@
 #define SMAP_DsPHYTER_BMCR 0x00
 #define SMAP_PHY_BMCR_RST (1 << 15)
 #define SMAP_DsPHYTER_BMSR 0x01
+#define SMAP_PHY_BMSR_LINK_STAT (1 << 2)
+#define SMAP_PHY_BMSR_ANEN_AVAIL (1 << 3)
+#define SMAP_PHY_BMSR_ANEN_COMPLETE (1 << 5)
+#define SMAP_PHY_BMSR_100btxfd (1 << 15)
 
 struct smap_bd
 {
