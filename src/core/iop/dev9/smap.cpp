@@ -141,6 +141,9 @@ void SMAP::write32(uint32_t address, uint32_t value)
 {
     switch (address)
     {
+        case SMAP_REG(SMAP_R_TXFIFO_DATA):
+            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA %08x\n", value);
+            return;
         case EMAC3_REG(SMAP_R_EMAC3_MODE0):
             printf("[DEV9] [SMAP] Write EMAC3_MODE0($%08x) %08x\n", address, EMAC3_WSWAP(value));
             if (value == EMAC3_WSWAP(SMAP_E3_SOFT_RESET))
@@ -236,6 +239,7 @@ void SMAP::write_sta(uint32_t reg)
 
     uint8_t address = sta & 0x1f;
     uint16_t data = sta >> 16;
+    printf("[DEV9] [SMAP] STA WRITE cmd: %d, addr: %x, data: %x\n", command, address, data);
 
     switch (command)
     {
@@ -248,6 +252,8 @@ void SMAP::write_sta(uint32_t reg)
         case 2:
             write_phy(address, data);
             break;
+        default:
+            printf("[DEV9] [SMAP] UNKNOWN STA_CTRL WRITE\n");
     }
 
     emac3_sta_ctrl |= SMAP_E3_PHY_OP_COMP;
@@ -260,8 +266,11 @@ uint16_t SMAP::read_phy(uint8_t address, uint16_t value)
     switch (address)
     {
         case SMAP_DsPHYTER_BMCR: // Basic mode control
-                printf("[DEV9] [SMAP] Read PHY BMCR\n");
+            printf("[DEV9] [SMAP] Read PHY BMCR\n");
             return 0;
+        case SMAP_DsPHYTER_BMSR:
+            printf("[DEV9] [SMAP] Write to PHY BMSR of %04x\n", value);
+            return 0 | SMAP_PHY_BMSR_100btxfd | SMAP_PHY_BMSR_LINK_STAT | SMAP_PHY_BMSR_ANEN_COMPLETE | SMAP_PHY_BMSR_ANEN_AVAIL;
     }
     printf("[DEV9] [SMAP] Read from PHY %02x\n", address);
     return 0;
@@ -275,6 +284,9 @@ void SMAP::write_phy(uint8_t address, uint16_t value)
             printf("[DEV9] [SMAP] Write to PHY BMCR of %04x\n", value);
             if (value == SMAP_PHY_BMCR_RST)
                 printf("[DEV9] [SMAP] PHY Reset\n");
+            return;
+        case SMAP_DsPHYTER_BMSR:
+            printf("[DEV9] [SMAP] Write to PHY BMSR of %04x\n", value);
             return;
     }
     printf("[DEV9] [SMAP] Write to PHY %02x of %04x\n", address, value);
