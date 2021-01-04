@@ -22,6 +22,39 @@ uint8_t SMAP::read8(uint32_t address)
 
 uint16_t SMAP::read16(uint32_t address)
 {
+    if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
+    {
+        uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
+        uint16_t* bd = (uint16_t*)tx_bd;
+        uint8_t bd_num = index / 4;
+        printf("[DEV9] [SMAP] TX BD Read from BD %d(%08x) of %04x\n", bd_num, address, bd[index]);
+        return bd[index];
+    }
+    if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
+    {
+        uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
+        uint16_t* bd = (uint16_t*)rx_bd;
+        uint8_t bd_num = index / 4;
+        printf("[DEV9] [SMAP] RX BD Read from BD%d(%08x) of %04x\n", bd_num, address, bd[index]);
+        return bd[index];
+    }
+
+    switch (address)
+    {
+        case SMAP_REG(SMAP_R_TXFIFO_SIZE):
+            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_SIZE %04x\n", txfifo_size);
+            return txfifo_size;
+        case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
+            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_WR_PTR %04x\n", txfifo_write_ptr);
+            return txfifo_write_ptr;
+        case SMAP_REG(SMAP_R_RXFIFO_SIZE):
+            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_SIZE %04x\n", txfifo_size);
+            return rxfifo_size;
+        case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
+            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_RD_PTR %04x\n", txfifo_read_ptr);
+            return rxfifo_read_ptr;
+    }
+
     printf("[DEV9] [SMAP] Unrecognized read 16 from %08x\n", address);
     return 0;
 }
@@ -113,17 +146,19 @@ void SMAP::write16(uint32_t address, uint16_t value)
 {
     if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
     {
-        printf("[DEV9] [SMAP] TX BD Write to %08x of %04x\n", address, value);
         uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
         uint16_t* bd = (uint16_t*)tx_bd;
+        uint8_t bd_num = index / 4;
+        printf("[DEV9] [SMAP] TX BD Write to BD %d(%08x) of %04x\n", bd_num, address, value);
         bd[index] = value;
         return;
     }
     if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
     {
-        printf("[DEV9] [SMAP] RX BD Write to %08x of %04x\n", address, value);
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
         uint16_t* bd = (uint16_t*)rx_bd;
+        uint8_t bd_num = index / 4;
+        printf("[DEV9] [SMAP] RX BD Write to BD%d(%08x) of %04x\n", bd_num, address, value);
         bd[index] = value;
         return;
     }
@@ -131,6 +166,22 @@ void SMAP::write16(uint32_t address, uint16_t value)
     {
         case SMAP_REG(SMAP_R_INTR_CLR):
             printf("[DEV9] [SMAP] Write INTR_CLR %04x\n", value);
+            return;
+        case SMAP_REG(SMAP_R_TXFIFO_SIZE):
+            printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_SIZE %04x\n", value);
+            //txfifo_size = value; idk what this size is
+            return;
+        case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
+            printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_WR_PTR %04x\n", value);
+            txfifo_write_ptr = value;
+            return;
+        case SMAP_REG(SMAP_R_RXFIFO_SIZE):
+            printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_SIZE %04x\n", value);
+            //rxfifo_size = value; idk what this size is
+            return;
+        case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
+            printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_RD_PTR %04x\n", value);
+            rxfifo_read_ptr = value;
             return;
     }
     printf("[DEV9] [SMAP] Unrecognized SMAP write16 to $%08x of %04x\n", address, value);
@@ -142,8 +193,13 @@ void SMAP::write32(uint32_t address, uint32_t value)
     switch (address)
     {
         case SMAP_REG(SMAP_R_TXFIFO_DATA):
-            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA %08x\n", value);
+        {
+            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo_write_ptr, value);
+            uint32_t* fifo = (uint32_t*)(&txfifo[txfifo_write_ptr]);
+            *fifo = value;
+            txfifo_write_ptr = (txfifo_write_ptr + 4) % txfifo_size;
             return;
+        }
         case EMAC3_REG(SMAP_R_EMAC3_MODE0):
             printf("[DEV9] [SMAP] Write EMAC3_MODE0($%08x) %08x\n", address, EMAC3_WSWAP(value));
             if (value == EMAC3_WSWAP(SMAP_E3_SOFT_RESET))
@@ -152,9 +208,26 @@ void SMAP::write32(uint32_t address, uint32_t value)
                 // TODO: I guess everything should go...
                 std::memset(rxfifo, 0, sizeof(rxfifo));
                 std::memset(txfifo, 0, sizeof(txfifo));
-                rxfifo_write_ptr = 0;
+                rxfifo_read_ptr = 0;
                 txfifo_write_ptr = 0;
                 emac3_mode0 = 0;
+
+                // on second thought, emac3 reset probably wouldn't do anything to the bds?
+                for (auto& bd : rx_bd)
+                {
+                    bd.ctrl_stat = 0;
+                    bd.reserved = 0;
+                    bd.length = 0;
+                    bd.pointer = 0;
+                }
+
+                for (auto& bd : tx_bd)
+                {
+                    bd.ctrl_stat = 0;
+                    bd.reserved = 0;
+                    bd.length = 0;
+                    bd.pointer = 0;
+                }
             }
             return;
         case EMAC3_REG(SMAP_R_EMAC3_MODE1):
@@ -227,6 +300,7 @@ void SMAP::write32(uint32_t address, uint32_t value)
     return;
 }
 
+// Sony's network driver uses 16bit writes for STA :(
 void SMAP::write_sta(uint32_t reg)
 {
     uint32_t sta = EMAC3_WSWAP(reg);
