@@ -2,6 +2,7 @@
 #define __SMAP_H_
 
 #include <cstdint>
+#include <memory>
 
 /* SMAP is the network chip of the PS2's network adaptor.
  * It is hooked up to an EMAC very similar to the one on the PPC 405GP
@@ -15,9 +16,13 @@
 #define SMAP_R_INTR_CLR 0x28
 
 #define SMAP_R_TXFIFO_CTRL 0xf00
+#define SMAP_R_TXFIFO_WR_PTR 0xf04
+#define SMAP_R_TXFIFO_SIZE 0xf08
 #define SMAP_R_TXFIFO_DATA 0x1000
 
 #define SMAP_R_RXFIFO_CTRL 0xf30
+#define SMAP_R_RXFIFO_RD_PTR 0xf34
+#define SMAP_R_RXFIFO_SIZE 0xf38
 #define SMAP_R_RXFIFO_DATA 0x1100
 
 #define SMAP_EMAC3_REGBASE 0x1f00
@@ -113,6 +118,8 @@ class SMAP
     uint64_t mac_address = 0;
 
     // 64 buffer descriptors, 512 kb
+    //std::unique_ptr<smap_bd[64]> rx_bd;
+    //std::unique_ptr<smap_bd[64]> tx_bd;
     smap_bd rx_bd[64] = {};
     smap_bd tx_bd[64] = {};
 
@@ -122,6 +129,7 @@ class SMAP
     uint16_t rxfifo_size = 512;
     uint8_t rxfifo[4 * 1024] = {};
     uint16_t rxfifo_write_ptr = 0;
+    uint16_t rxfifo_read_ptr = 0;
 
     uint32_t tx_bd_index = 0;
     // Fifo size is configurable by the driver
@@ -129,6 +137,7 @@ class SMAP
     uint16_t txfifo_size = 512;
     uint8_t txfifo[2 * 1024] = {};
     uint16_t txfifo_write_ptr = 0;
+    uint16_t txfifo_read_ptr = 0;
 
     uint8_t txfifo_ctrl = 0;
     uint8_t rxfifo_ctrl = 0;
