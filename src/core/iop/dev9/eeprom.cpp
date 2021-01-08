@@ -48,6 +48,10 @@ void EEPROM::step()
             // Address read in from highest bit to lowest bit
             m_address |= m_data_in << (5 - m_sequence);
 
+            // Don't know what the behaviour would be but lets prevent oob.
+            m_address = m_address % 32;
+
+
             m_sequence++;
             if (m_sequence == 6)
             {
@@ -66,7 +70,8 @@ void EEPROM::step()
             if (m_sequence == 16)
             {
                 m_sequence = 0;
-                m_address++;
+                // Let's prevent out of bounds
+                m_address = (m_address + 1) % 32;
             }
             break;
     }
