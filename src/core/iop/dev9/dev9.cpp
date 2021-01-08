@@ -60,6 +60,14 @@ uint16_t DEV9::read16(uint32_t address)
             case SPD_REG(SPD_R_INTR_MASK):
                 printf("[DEV9] [SPD] Read INTR_MASK: %04x\n", irq_mask);
                 return irq_mask;
+
+            case SPD_REG(SPD_R_PIO_DIR):
+                printf("[DEV9] [SPD] Read8 PIO_DIR: %02x\n ", pio_dir);
+                return pio_dir;
+
+            // Writing to PIO_DATA apparently also toggles the LED on the network adapter?
+            case SPD_REG(SPD_R_PIO_DATA):
+                return eeprom.read();
         }
 
         printf("[DEV9] [SPD] Unrecognized read16 from %08x\n", address);
@@ -145,6 +153,17 @@ void DEV9::write16(uint32_t address, uint16_t value)
             case SPD_REG(SPD_R_INTR_MASK):
                 printf("[DEV9] [SPD] Write16 INTR_MASK: %04x\n", value);
                 irq_mask = value;
+                return;
+
+            case SPD_REG(SPD_R_PIO_DIR):
+                printf("[DEV9] [SPD] Write8 PIO_DIR: %04x\n", value);
+                pio_dir = value & 0xFF;
+                return;
+
+            case SPD_REG(SPD_R_PIO_DATA):
+                if ((pio_dir & 0xE0) == 0xE0)
+                    eeprom.write(value & 0xFF);
+                led = value & 1;
                 return;
         }
 
