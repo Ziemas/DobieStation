@@ -50,7 +50,8 @@ class EEPROM
 
     // Pins
     uint8_t m_clock = 0;
-    uint8_t m_data = 0;
+    uint8_t m_data_in = 0;
+    uint8_t m_data_out = 0;
 
     // Internal state
     State m_state = State::cmd_start;
