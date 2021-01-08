@@ -2,65 +2,62 @@
 #define __EEPROM_H_
 #include <cstdint>
 
-/*  EEPROM on network adapter, stores the MAC address.
- *  This is a serial eeprom, you control it using the enable
- *  the clock and a single data line
- *
- *  Doesn't seem to be one of the common protocols.
- *  */
+/*  EEPROM on the network adapter, stores the MAC address.
+ *  This is a serial eeprom, you control it using the chip select,
+ *  the clock, and the two data lines.
+ **/
 
-/* the 3 most significant bits of the pio data register represents:
- *         __________|___________________________________|_____|____________
- * enable /          |                                   |     |
- *          __    __ |  __    __    __    __    __    __ |  __ |  __    __
- * clock   /  \__/  \|_/  \__/  \__/  \__/  \__/  \__/  \|_/  \|_/  \__/  \
- *          ________ |                                   |     |  _______
- * data    /        \|___________________________________|_____|_/       \__
- *           1    1  |  0     0     0     0     0     0  |     |   1     1
- *             cmd                    addr                wait      data
+/* the 4 most significant bits of the pio data register represents:
+ *         ____|___________|___________________________________|____________
+ * enable /    |           |                                   |
+ *          __ |   __   __ |   __    __    __    __    __   __ |  __    __
+ * clock   /  \|__/  \_/  \|__/  \__/  \__/  \__/  \__/  \_/  \|_/  \__/  \
+ *          ___|_____      |                                   |
+ * din     /   |     \_____|___________________________________|____________
+ *             |           |                                   |  _______
+ * dout    ____|___________|___________________________________|_/       \__
+ *             |           |                                   |
+ * din       1 |  1    0   |   0     0     0     0     0    0  |   0    0
+ * dout      0 |  0    0   |   0     0     0     0     0    0  |   1    1
+ *        start     cmd                   addr                      data
  *
- *        ... you get the idea, but maybe not exactly like this sketch
+ *  1 bit to signal the start -> 2 bits of command -> 6 bits of address -> data
  *
- *        2 command bits bits -> 6 address bits -> one bit skipped -> data
- *
- *        once the address has been set you can fire away,
- *        the address automatically increments
- *
- *   */
-
-/*  There seems to be some xor action going on in the dev9ghz implementation
- *  I don't understand it so tried to copy the functionality while
- *  making the implementation more sane, we'll se if this works at all later */
+ * */
 
 class EEPROM
 {
   private:
-    enum STATE
-    {
-        READ_COMMAND = 0,
-        READ_ADDRESS,
-        ACK,
-        TRANSMIT,
-    };
+    static constexpr uint8_t PP_DOUT_SHIFT = 4; /* Data output */
+    static constexpr uint8_t PP_DIN_SHIFT = 5;  /* Data input  */
+    static constexpr uint8_t PP_SCLK_SHIFT = 6; /* Clock       */
+    static constexpr uint8_t PP_CSEL_SHIFT = 7; /* Chip select */
 
-    enum COMMAND
+    static constexpr uint8_t PP_OP_READ = 2;  /* 2b'10 */
+    static constexpr uint8_t PP_OP_WRITE = 1; /* 2b'01 */
+
+    // Write enable and disable, presumably controlled by using the address bits.
+    static constexpr uint8_t PP_OP_EWEN = 0; /* 2b'00 */
+    static constexpr uint8_t PP_OP_EWDS = 0; /* 2b'00 */
+
+    enum class State
     {
-        unk1 = 0,
-        unk2 = 1,
-        WRITE = 2,
-        READ = 3,
+        cmd_start,
+        read_cmd,
+        read_address,
+        transmit,
     };
 
     // Pins
-    uint8_t clock = 0;
-    uint8_t data = 0;
+    uint8_t m_clock = 0;
+    uint8_t m_data = 0;
 
     // Internal state
-    uint8_t state = READ_COMMAND;
-    uint8_t command = 0;
-    uint8_t sequence = 0;
-    uint8_t address = 0;
-    uint16_t* eeprom;
+    State m_state = State::cmd_start;
+    uint8_t m_command = 0;
+    uint8_t m_sequence = 0;
+    uint8_t m_address = 0;
+    uint16_t* m_eeprom;
 
     void step();
 
