@@ -25,18 +25,16 @@ uint16_t SMAP::read16(uint32_t address)
     if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
-        uint16_t* bd = (uint16_t*)tx_bd;
         uint8_t bd_num = index / 4;
-        printf("[DEV9] [SMAP] TX BD Read from BD %d(%08x) of %04x\n", bd_num, address, bd[index]);
-        return bd[index];
+        printf("[DEV9] [SMAP] TX BD Read from BD %d(%08x) of %04x\n", bd_num, address, tx_bd.raw[index]);
+        return tx_bd.raw[index];
     }
     if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
-        uint16_t* bd = (uint16_t*)rx_bd;
         uint8_t bd_num = index / 4;
-        printf("[DEV9] [SMAP] RX BD Read from BD%d(%08x) of %04x\n", bd_num, address, bd[index]);
-        return bd[index];
+        printf("[DEV9] [SMAP] RX BD Read from BD%d(%08x) of %04x\n", bd_num, address, rx_bd.raw[index]);
+        return rx_bd.raw[index];
     }
 
     switch (address)
@@ -147,19 +145,17 @@ void SMAP::write16(uint32_t address, uint16_t value)
     if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
-        uint16_t* bd = (uint16_t*)tx_bd;
         uint8_t bd_num = index / 4;
         printf("[DEV9] [SMAP] TX BD Write to BD %d(%08x) of %04x\n", bd_num, address, value);
-        bd[index] = value;
+        tx_bd.raw[index] = value;
         return;
     }
     if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
-        uint16_t* bd = (uint16_t*)rx_bd;
         uint8_t bd_num = index / 4;
         printf("[DEV9] [SMAP] RX BD Write to BD%d(%08x) of %04x\n", bd_num, address, value);
-        bd[index] = value;
+        rx_bd.raw[index] = value;
         return;
     }
     switch (address)
@@ -213,7 +209,7 @@ void SMAP::write32(uint32_t address, uint32_t value)
                 emac3_mode0 = 0;
 
                 // on second thought, emac3 reset probably wouldn't do anything to the bds?
-                for (auto& bd : rx_bd)
+                for (auto& bd : rx_bd.bd)
                 {
                     bd.ctrl_stat = 0;
                     bd.reserved = 0;
@@ -221,7 +217,7 @@ void SMAP::write32(uint32_t address, uint32_t value)
                     bd.pointer = 0;
                 }
 
-                for (auto& bd : tx_bd)
+                for (auto& bd : tx_bd.bd)
                 {
                     bd.ctrl_stat = 0;
                     bd.reserved = 0;
