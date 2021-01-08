@@ -28,18 +28,15 @@ EEPROM::EEPROM(uint16_t* eeprom_data) : m_eeprom(eeprom_data)
 
 void EEPROM::step()
 {
-    uint8_t line = (m_data >> PP_DIN_SHIFT) & 1;
-
     switch (m_state)
     {
         case State::cmd_start: // wait for data to go high
-            m_data = 0;
             m_sequence = 0;
-            if (line)
+            if (m_data_in)
                 m_state = State::read_cmd;
             break;
         case State::read_cmd: // read two bits of command
-            m_command |= line << (1 - m_sequence);
+            m_command |= m_data_in << (1 - m_sequence);
             m_sequence++;
             if (m_sequence == 2)
             {
@@ -49,7 +46,7 @@ void EEPROM::step()
             break;
         case State::read_address: // read 6 bits of address
             // Address read in from highest bit to lowest bit
-            m_address |= line << (5 - m_sequence);
+            m_address |= m_data_in << (5 - m_sequence);
 
             m_sequence++;
             if (m_sequence == 6)
@@ -60,10 +57,10 @@ void EEPROM::step()
             break;
         case State::transmit: // fire away, bit position increments every pulse
             if (m_command == PP_OP_READ)
-                m_data = ((m_eeprom[m_address] >> (15 - m_sequence) ) & 1) << PP_DOUT_SHIFT;
+                m_data_out = (m_eeprom[m_address] >> (15 - m_sequence)) & 1;
 
             if (m_command == PP_OP_WRITE) // TODO: untested
-                m_eeprom[m_address] = m_eeprom[m_address] | (line << (15 - m_sequence));
+                m_eeprom[m_address] = m_eeprom[m_address] | (m_data_in << (15 - m_sequence));
 
             m_sequence++;
             if (m_sequence == 16)
@@ -81,6 +78,7 @@ void EEPROM::write(uint8_t value)
     printf("[DEV9] [EEPROM] Write PIO_DATA %02x\n", value);
     uint8_t cselect = (value >> PP_CSEL_SHIFT) & 1;
     uint8_t new_clock = (value >> PP_SCLK_SHIFT) & 1;
+    uint8_t data_in = (value >> PP_DIN_SHIFT) & 1;
 
     if (cselect == 0)
     {
@@ -91,7 +89,7 @@ void EEPROM::write(uint8_t value)
         return;
     }
 
-    m_data = value;
+    m_data_in = data_in;
     if (new_clock == 1)
     {
         // The eeprom works on the rising clock edge
@@ -105,6 +103,6 @@ void EEPROM::write(uint8_t value)
 
 uint8_t EEPROM::read()
 {
-    printf("[DEV9] [EEPROM] Read PIO_DATA %02x\n", m_data);
-    return m_data;
+    printf("[DEV9] [EEPROM] Read PIO_DATA %02x\n", m_data_out);
+    return m_data_out << PP_DOUT_SHIFT;
 }
