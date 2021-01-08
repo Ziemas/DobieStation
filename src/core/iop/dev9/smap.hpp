@@ -98,6 +98,38 @@ class SMAP
         CTRL_DMA_ENABLE = 0x2,
     };
 
+    union emac3_regs
+    {
+        uint16_t raw16[27 * 2];
+        uint32_t raw32[27];
+
+        struct
+        {
+            /* 0x0  */ uint32_t mode0;
+            /* 0x4  */ uint32_t mode1;
+            /* 0x8  */ uint32_t txmode0;
+            /* 0xc  */ uint32_t txmode1;
+            /* 0x10 */ uint32_t rxmode;
+            /* 0x14 */ uint32_t intr_stat;
+            /* 0x18 */ uint32_t intr_enable;
+            /* 0x1c */ uint64_t mac_address;
+            /* 0x24 */ uint32_t vlan_tpid;
+            /* 0x28 */ uint32_t vlan_tci;
+            /* 0x3c */ uint32_t pause_timer;
+            /* 0x30 */ uint32_t indidual_hash[4];
+            /* 0x40 */ uint32_t group_hash[4];
+            /* 0x50 */ uint64_t last_sa;
+            /* 0x58 */ uint32_t inter_frame_gap;
+            /* 0x5C */ uint32_t sta_ctrl;
+            /* 0x60 */ uint32_t tx_threshold;
+            /* 0x64 */ uint32_t rx_watermark;
+            /* 0x68 */ uint32_t tx_octets;
+            /* 0x6c */ uint32_t rx_octets;
+        };
+    };
+
+    emac3_regs emac3reg = {};
+
     uint8_t bd_mode = 0;
     uint32_t emac3_mode0 = 0;
     uint32_t emac3_mode1 = 0;
@@ -120,8 +152,16 @@ class SMAP
     // 64 buffer descriptors, 512 kb
     //std::unique_ptr<smap_bd[64]> rx_bd;
     //std::unique_ptr<smap_bd[64]> tx_bd;
-    smap_bd rx_bd[64] = {};
-    smap_bd tx_bd[64] = {};
+
+    // Call the UB cops I don't care. GCC says I can do it
+    union bufdesc
+    {
+        uint16_t raw[64 * 4];
+        smap_bd bd[64];
+    };
+
+    bufdesc tx_bd = {};
+    bufdesc rx_bd = {};
 
     uint32_t rx_bd_index = 0;
     // Fifo size is configurable by the driver
