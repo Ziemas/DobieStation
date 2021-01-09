@@ -98,6 +98,7 @@ class SMAP
         CTRL_DMA_ENABLE = 0x2,
     };
 
+    #pragma pack(push, 1)
     union emac3_regs
     {
         uint16_t raw16[27 * 2];
@@ -127,6 +128,7 @@ class SMAP
             /* 0x6c */ uint32_t rx_octets;
         };
     };
+    #pragma pack(pop)
 
     emac3_regs emac3reg = {};
 
