@@ -169,7 +169,7 @@ void IOP_DMA::process_DEV9()
 {
     if (channels[IOP_DEV9].word_count)
     {
-        printf("[IOP DMA] Words to copy for DEV9");
+        printf("[IOP DMA] Words to copy for DEV9\n");
     }
 }
 

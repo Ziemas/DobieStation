@@ -39,11 +39,29 @@ class IOP_DMA;
 
 class DEV9
 {
+  public:
+    DEV9(IOP_INTC* intc, IOP_DMA* dma);
+
+    void reset();
+
+    void request_dma();
+
+    uint32_t read_DMA();
+    void write_DMA(uint32_t value);
+
+    uint8_t read8(uint32_t address);
+    uint16_t read16(uint32_t address);
+    uint32_t read32(uint32_t address);
+
+    void write8(uint32_t address, uint8_t value);
+    void write16(uint32_t address, uint16_t value);
+    void write32(uint32_t address, uint32_t value);
+
   private:
     IOP_INTC* intc;
     IOP_DMA* dma;
     EEPROM eeprom;
-    SMAP smap;
+    SMAP smap {*this};
 
     bool connected = 1;
 
@@ -78,22 +96,6 @@ class DEV9
         PCMCIA = 0x20,
         EXPBAY = 0x30,
     };
-
-  public:
-    DEV9(IOP_INTC* intc, IOP_DMA* dma);
-
-    void reset();
-
-    uint32_t read_DMA();
-    void write_DMA(uint32_t value);
-
-    uint8_t read8(uint32_t address);
-    uint16_t read16(uint32_t address);
-    uint32_t read32(uint32_t address);
-
-    void write8(uint32_t address, uint8_t value);
-    void write16(uint32_t address, uint16_t value);
-    void write32(uint32_t address, uint32_t value);
 };
 
 #endif // __DEV9_H_

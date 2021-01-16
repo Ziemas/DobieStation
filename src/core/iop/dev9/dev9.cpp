@@ -1,4 +1,5 @@
 #include "dev9.hpp"
+#include "../iop_dma.hpp"
 #include <cstdio>
 
 DEV9::DEV9(IOP_INTC* intc, IOP_DMA* dma) : intc(intc), dma(dma), eeprom(nullptr)
@@ -167,7 +168,8 @@ void DEV9::write16(uint32_t address, uint16_t value)
                 return;
 
             case SPD_REG(SPD_R_DMA_CTRL):
-                printf("[DEV9] [SPD] Write16 DMA_CTRL: %04x\n", value);
+                printf("[DEV9] [SPD] Write16 SPD_R_DMA_CTRL: %04x\n", value);
+                // Device 0 = ata, 1 = smap
                 // Probably setup for which chip gets dma?
                 dma_ctrl = value;
                 return;
@@ -199,4 +201,21 @@ void DEV9::write32(uint32_t address, uint32_t value)
         return;
     }
     printf("[DEV9] Unrecognized DEV9 write32 to $%08x of $%08x\n", address, value);
+}
+
+uint32_t DEV9::read_DMA()
+{
+    // TODO: Select correct source in the future
+    return smap.read_DMA();
+}
+
+void DEV9::write_DMA(uint32_t value)
+{
+    // TODO: Select correct source in the future
+    smap.write_DMA(value);
+}
+
+void DEV9::request_dma()
+{
+    dma->set_DMA_request(9);
 }
