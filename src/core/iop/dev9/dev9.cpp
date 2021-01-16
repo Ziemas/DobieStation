@@ -140,7 +140,7 @@ void DEV9::write8(uint32_t address, uint8_t value)
         return;
     }
 
-    printf("[DEV0] Unrecognized DEV9 write8 to $%08x of $%02x\n", address, value);
+    printf("[DEV9] Unrecognized DEV9 write8 to $%08x of $%02x\n", address, value);
     printf("break here\n");
 }
 
@@ -156,7 +156,7 @@ void DEV9::write16(uint32_t address, uint16_t value)
                 return;
 
             case SPD_REG(SPD_R_PIO_DIR):
-                printf("[DEV9] [SPD] Write8 PIO_DIR: %04x\n", value);
+                printf("[DEV9] [SPD] Write16 PIO_DIR: %04x\n", value);
                 pio_dir = value & 0xFF;
                 return;
 
