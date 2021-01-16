@@ -1,6 +1,11 @@
 #include "smap.hpp"
+#include "dev9.hpp"
 #include <cstdio>
 #include <cstring>
+
+SMAP::SMAP(DEV9& dev9) : dev9(dev9)
+{
+}
 
 uint8_t SMAP::read8(uint32_t address)
 {
@@ -127,17 +132,31 @@ void SMAP::write8(uint32_t address, uint8_t value)
             return;
         case SMAP_REG(SMAP_R_TXFIFO_CTRL):
             printf("[DEV9] [SMAP] Write8 TXFIFO_CTRL %02x\n", value);
-            if (value == CTRL_RESET) // Reset the fifo?
-                txfifo_ctrl = 0;
-            if (value == CTRL_DMA_ENABLE)
+            if (value & SMAP_TXFIFO_RESET) // Reset the fifo?
             {
+                memset(txfifo, 0, 2048); // maybe
+                txfifo_ctrl = 0;
+            }
+            if (value & SMAP_TXFIFO_DMAEN)
+            {
+                // Enable DMA TODO: should reset after completed dma?
                 printf("[DEV9] [SMAP] TXFIFO ENABLE DMA\n");
+                dev9.request_dma();
             }
             return;
         case SMAP_REG(SMAP_R_RXFIFO_CTRL):
             printf("[DEV9] [SMAP] Write RXFIFO_CTRL %02x\n", value);
-            if (value == CTRL_RESET) // Reset the fifo?
+            if (value == SMAP_RXFIFO_RESET) // Reset the fifo?
+            {
+                memset(rxfifo, 0, 4096); // maybe
                 rxfifo_ctrl = 0;
+            }
+            if (value & SMAP_TXFIFO_DMAEN)
+            {
+                // Enable DMA TODO: should reset after completed dma?
+                printf("[DEV9] [SMAP] RXFIFO ENABLE DMA\n");
+                dev9.request_dma();
+            }
             return;
     }
     printf("[DEV9] [SMAP] Unrecognized write8 to $%08x of %02x\n", address, value);
@@ -170,6 +189,7 @@ void SMAP::write16(uint32_t address, uint16_t value)
         case SMAP_REG(SMAP_R_TXFIFO_SIZE):
             printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_SIZE %04x\n", value);
             //txfifo_size = value; DMA Slice count?
+            txdma_slice_count = value;
             return;
         case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
             printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_WR_PTR %04x\n", value);
@@ -178,6 +198,7 @@ void SMAP::write16(uint32_t address, uint16_t value)
         case SMAP_REG(SMAP_R_RXFIFO_SIZE):
             printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_SIZE %04x\n", value);
             //rxfifo_size = value; DMA slice count?
+            rxdma_slice_count = value;
             return;
         case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
             printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_RD_PTR %04x\n", value);
@@ -364,4 +385,16 @@ void SMAP::write_phy(uint8_t address, uint16_t value)
             return;
     }
     printf("[DEV9] [SMAP] Write to PHY %02x of %04x\n", address, value);
+}
+
+void SMAP::write_DMA(uint32_t value)
+{
+    printf("[DEV9] [SMAP] DMA Write of %08x", value);
+
+}
+
+uint32_t SMAP::read_DMA()
+{
+    printf("[DEV9] [SMAP] DMA read");
+    return 0;
 }

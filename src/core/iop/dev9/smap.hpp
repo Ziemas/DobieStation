@@ -16,11 +16,15 @@
 #define SMAP_R_INTR_CLR 0x28
 
 #define SMAP_R_TXFIFO_CTRL 0xf00
+#define SMAP_TXFIFO_RESET (1 << 0)
+#define SMAP_TXFIFO_DMAEN (1 << 1)
 #define SMAP_R_TXFIFO_WR_PTR 0xf04
 #define SMAP_R_TXFIFO_SIZE 0xf08
 #define SMAP_R_TXFIFO_DATA 0x1000
 
 #define SMAP_R_RXFIFO_CTRL 0xf30
+#define SMAP_RXFIFO_RESET (1 << 0)
+#define SMAP_RXFIFO_DMAEN (1 << 1)
 #define SMAP_R_RXFIFO_RD_PTR 0xf34
 #define SMAP_R_RXFIFO_SIZE 0xf38
 #define SMAP_R_RXFIFO_DATA 0x1100
@@ -89,16 +93,33 @@ struct smap_bd
     uint16_t pointer;
 };
 
+class DEV9;
+
 class SMAP
 {
+  public:
+    SMAP(DEV9& dev9);
+
+    uint32_t read_DMA();
+    void write_DMA(uint32_t value);
+
+    uint8_t read8(uint32_t address);
+    uint16_t read16(uint32_t address);
+    uint32_t read32(uint32_t address);
+    void write8(uint32_t address, uint8_t value);
+    void write16(uint32_t address, uint16_t value);
+    void write32(uint32_t address, uint32_t value);
+
   private:
-    enum CTRL
+    DEV9& dev9;
+
+    enum class CTRL
     {
-        CTRL_RESET = 0x1,
-        CTRL_DMA_ENABLE = 0x2,
+        RESET = 0x1,
+        DMA_ENABLE = 0x2,
     };
 
-    #pragma pack(push, 1)
+#pragma pack(push, 1)
     union emac3_regs
     {
         uint16_t raw16[27 * 2];
@@ -128,12 +149,12 @@ class SMAP
             /* 0x6c */ uint32_t rx_octets;
         };
     };
-    #pragma pack(pop)
+#pragma pack(pop)
 
     emac3_regs emac3reg = {};
 
-        // TODO: parse all the bit fields in these regs
-        // FIFO size etc
+    // TODO: parse all the bit fields in these regs
+    // FIFO size etc
     uint8_t bd_mode = 0;
     uint32_t emac3_mode0 = 0;
     uint32_t emac3_mode1 = 0;
@@ -157,7 +178,6 @@ class SMAP
     //std::unique_ptr<smap_bd[64]> rx_bd;
     //std::unique_ptr<smap_bd[64]> tx_bd;
 
-    // Call the UB cops I don't care. GCC says I can do it
     union bufdesc
     {
         uint16_t raw[64 * 4];
@@ -167,6 +187,7 @@ class SMAP
     bufdesc tx_bd = {};
     bufdesc rx_bd = {};
 
+    uint16_t rxdma_slice_count = 0;
     uint32_t rx_bd_index = 0;
     // Fifo size is configurable by the driver
     // options are 512, 1kb, 2kb, 4kb
@@ -175,6 +196,8 @@ class SMAP
     uint16_t rxfifo_write_ptr = 0;
     uint16_t rxfifo_read_ptr = 0;
 
+
+    uint16_t txdma_slice_count = 0;
     uint32_t tx_bd_index = 0;
     // Fifo size is configurable by the driver
     // options are 512, 1kb, 2kb.
@@ -189,14 +212,6 @@ class SMAP
     void write_phy(uint8_t address, uint16_t value);
     uint16_t read_phy(uint8_t address, uint16_t value);
     void write_sta(uint32_t reg);
-
-  public:
-    uint8_t read8(uint32_t address);
-    uint16_t read16(uint32_t address);
-    uint32_t read32(uint32_t address);
-    void write8(uint32_t address, uint8_t value);
-    void write16(uint32_t address, uint16_t value);
-    void write32(uint32_t address, uint32_t value);
 };
 
 #endif // __SMAP_H_
