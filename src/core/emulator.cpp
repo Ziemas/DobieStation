@@ -43,12 +43,12 @@ Emulator::Emulator() :
     cdvd(&iop_intc, &iop_dma, &scheduler),
     cp0(&dmac),
     cpu(&cp0, &fpu, this, &sif, &vu0, &vu1),
-    dev9(&iop_intc),
+    dev9(&iop_intc, &iop_dma),
     dmac(&cpu, this, &gif, &ipu, &sif, &vif0, &vif1, &vu0, &vu1),
     gif(&gs, &dmac),
     gs(&intc),
     iop(this),
-    iop_dma(&iop_intc, &cdvd, &sif, &sio2, &spu, &spu2),
+    iop_dma(&iop_intc, &cdvd, &sif, &sio2, &spu, &spu2, &dev9),
     iop_intc(&iop),
     iop_timers(&iop_intc, &scheduler),
     intc(&cpu, &scheduler),
@@ -1295,6 +1295,10 @@ uint32_t Emulator::iop_read32(uint32_t address)
             return iop_dma.get_chan_addr(8);
         case 0x1F801508:
             return iop_dma.get_chan_control(8);
+        case 0x1F801510:
+            return iop_dma.get_chan_addr(9);
+        case 0x1F801518:
+            return iop_dma.get_chan_control(9);
         case 0x1F801528:
             return iop_dma.get_chan_control(10);
         case 0x1F801548:
@@ -1509,6 +1513,12 @@ void Emulator::iop_write16(uint32_t address, uint16_t value)
         case 0x1F801506:
             iop_dma.set_chan_count(8, value);
             return;
+        case 0x1F801514:
+            iop_dma.set_chan_size(9, value);
+            return;
+        case 0x1F801516:
+            iop_dma.set_chan_count(9, value);
+            return;
         case 0x1F801524:
             iop_dma.set_chan_size(10, value);
             return;
@@ -1694,6 +1704,16 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             return;
         case 0x1F801508:
             iop_dma.set_chan_control(8, value);
+            return;
+        //DEV9 DMA
+        case 0x1F801510:
+            iop_dma.set_chan_addr(9, value);
+            return;
+        case 0x1F801514:
+            iop_dma.set_chan_block(9, value);
+            return;
+        case 0x1F801518:
+            iop_dma.set_chan_control(9, value);
             return;
         //SIF0 DMA
         case 0x1F801520:

@@ -29,19 +29,34 @@
 #define SPD_R_REV_3 0x04
 #define SPD_R_REV_8 0x0e
 
+#define SPD_R_DMA_CTRL 0x24
+
 #define DEV9_R_POWER 0x1F80146C
 #define DEV9_R_REV 0x1F80146E
 
 class IOP_INTC;
+class IOP_DMA;
 
 class DEV9
 {
   private:
     IOP_INTC* intc;
+    IOP_DMA* dma;
     EEPROM eeprom;
-    SMAP smap = {};
+    SMAP smap;
 
     bool connected = 1;
+
+    enum class DMA_DEVICE
+    {
+        ATA,
+        SMAP,
+        // unk PSX devices
+        unk1 = 0x10,
+        unk2 = 0x20,
+    };
+
+    uint16_t dma_ctrl = 0;
 
     uint16_t irq_stat = 0;
     uint16_t irq_mask = 0;
@@ -65,9 +80,12 @@ class DEV9
     };
 
   public:
-    DEV9(IOP_INTC* intc);
+    DEV9(IOP_INTC* intc, IOP_DMA* dma);
 
     void reset();
+
+    uint32_t read_DMA();
+    void write_DMA(uint32_t value);
 
     uint8_t read8(uint32_t address);
     uint16_t read16(uint32_t address);

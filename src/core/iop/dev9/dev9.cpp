@@ -1,7 +1,7 @@
 #include "dev9.hpp"
 #include <cstdio>
 
-DEV9::DEV9(IOP_INTC* intc) : intc(intc), eeprom(nullptr)
+DEV9::DEV9(IOP_INTC* intc, IOP_DMA* dma) : intc(intc), dma(dma), eeprom(nullptr)
 {
 }
 
@@ -164,6 +164,12 @@ void DEV9::write16(uint32_t address, uint16_t value)
                 if ((pio_dir & 0xE0) == 0xE0)
                     eeprom.write(value & 0xFF);
                 led = value & 1;
+                return;
+
+            case SPD_REG(SPD_R_DMA_CTRL):
+                printf("[DEV9] [SPD] Write16 DMA_CTRL: %04x\n", value);
+                // Probably setup for which chip gets dma?
+                dma_ctrl = value;
                 return;
         }
 

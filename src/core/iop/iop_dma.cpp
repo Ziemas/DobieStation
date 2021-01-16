@@ -8,8 +8,8 @@
 #include "../errors.hpp"
 #include "../sif.hpp"
 
-IOP_DMA::IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, class SPU* spu, class SPU* spu2) :
-    intc(intc), cdvd(cdvd), sif(sif), sio2(sio2), spu(spu), spu2(spu2)
+IOP_DMA::IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, class SPU* spu, class SPU* spu2, DEV9* dev9) :
+    intc(intc), cdvd(cdvd), sif(sif), sio2(sio2), spu(spu), spu2(spu2), dev9(dev9)
 {
     apply_dma_functions();
 }
@@ -17,7 +17,7 @@ IOP_DMA::IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2
 const char* IOP_DMA::CHAN(int index)
 {
     static const char* borp[] =
-    {"MDECin", "MDECout", "GPU", "CDVD", "SPU", "PIO", "OTC", "67", "SPU2", "8", "SIF0", "SIF1", "SIO2in", "SIO2out"};
+    {"MDECin", "MDECout", "GPU", "CDVD", "SPU", "PIO", "OTC", "67", "SPU2", "DEV9", "SIF0", "SIF1", "SIO2in", "SIO2out"};
     return borp[index];
 }
 
@@ -162,6 +162,14 @@ void IOP_DMA::process_SPU2()
         transfer_end(IOP_SPU2);
         spu2->finish_DMA();
         return;
+    }
+}
+
+void IOP_DMA::process_DEV9()
+{
+    if (channels[IOP_DEV9].word_count)
+    {
+        printf("[IOP DMA] Words to copy for DEV9");
     }
 }
 
@@ -585,6 +593,7 @@ void IOP_DMA::apply_dma_functions()
     channels[IOP_SIF1].func = &IOP_DMA::process_SIF1;
     channels[IOP_SPU].func = &IOP_DMA::process_SPU;
     channels[IOP_SPU2].func = &IOP_DMA::process_SPU2;
+    channels[IOP_DEV9].func = &IOP_DMA::process_DEV9;
     channels[IOP_SIO2in].func = &IOP_DMA::process_SIO2in;
     channels[IOP_SIO2out].func = &IOP_DMA::process_SIO2out;
 }

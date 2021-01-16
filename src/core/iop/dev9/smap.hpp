@@ -132,6 +132,8 @@ class SMAP
 
     emac3_regs emac3reg = {};
 
+        // TODO: parse all the bit fields in these regs
+        // FIFO size etc
     uint8_t bd_mode = 0;
     uint32_t emac3_mode0 = 0;
     uint32_t emac3_mode1 = 0;
