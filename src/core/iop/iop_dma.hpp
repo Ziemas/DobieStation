@@ -54,6 +54,7 @@ class IOP_INTC;
 class SubsystemInterface;
 class SIO2;
 class SPU;
+class DEV9;
 
 enum IOP_DMA_CHANNELS
 {
@@ -65,7 +66,7 @@ enum IOP_DMA_CHANNELS
     IOP_PIO,
     IOP_OTC,
     IOP_SPU2 = 8,
-    IOP_unk,
+    IOP_DEV9,
     IOP_SIF0,
     IOP_SIF1,
     IOP_SIO2in,
@@ -81,6 +82,7 @@ class IOP_DMA
         SubsystemInterface* sif;
         SIO2* sio2;
         SPU *spu, *spu2;
+        DEV9* dev9;
         IOP_DMA_Channel channels[16];
         IOP_DMA_Channel* active_channel;
         std::list<IOP_DMA_Channel*> queued_channels;
@@ -93,6 +95,7 @@ class IOP_DMA
         void process_CDVD();
         void process_SPU();
         void process_SPU2();
+        void process_DEV9();
         void process_SIF0();
         void process_SIF1();
         void process_SIO2in();
@@ -104,7 +107,7 @@ class IOP_DMA
         void apply_dma_functions();
     public:
         static const char* CHAN(int index);
-        IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, SPU* spu, SPU* spu2);
+        IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, SPU* spu, SPU* spu2, DEV9* dev9);
 
         void reset(uint8_t* RAM);
         void run(int cycles);
