@@ -45,17 +45,23 @@ uint16_t SMAP::read16(uint32_t address)
     switch (address)
     {
         case SMAP_REG(SMAP_R_TXFIFO_SIZE):
-            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_SIZE %04x\n", txfifo_size);
-            return txfifo_size;
+            // Misleading reg name? SMAP doesn't control fifo size
+            // this seems to be used for DMA slice count
+            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_SIZE %04x\n", txdma_slice_count);
+            return txdma_slice_count;
         case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
-            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_WR_PTR %04x\n", txfifo_write_ptr);
-            return txfifo_write_ptr;
+            // TODO: check if we need this to offset to the correct memory
+            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_WR_PTR %04x\n", txfifo.wpos());
+            return txfifo.write;
         case SMAP_REG(SMAP_R_RXFIFO_SIZE):
-            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_SIZE %04x\n", txfifo_size);
-            return rxfifo_size;
+            // Misleading reg name? SMAP doesn't control fifo size
+            // this seems to be used for DMA slice count
+            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_SIZE %04x\n", rxdma_slice_count);
+            return rxdma_slice_count;
         case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
-            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_RD_PTR %04x\n", txfifo_read_ptr);
-            return rxfifo_read_ptr;
+            // TODO: check if we need this to offset to the correct memory
+            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_RD_PTR %04x\n", txfifo.rpos());
+            return rxfifo.read;
     }
 
     printf("[DEV9] [SMAP] Unrecognized read 16 from %08x\n", address);
@@ -134,7 +140,7 @@ void SMAP::write8(uint32_t address, uint8_t value)
             printf("[DEV9] [SMAP] Write8 TXFIFO_CTRL %02x\n", value);
             if (value & SMAP_TXFIFO_RESET) // Reset the fifo?
             {
-                memset(txfifo, 0, 2048); // maybe
+                txfifo.reset(); // maybe
                 txfifo_ctrl = 0;
             }
             if (value & SMAP_TXFIFO_DMAEN)
@@ -148,7 +154,7 @@ void SMAP::write8(uint32_t address, uint8_t value)
             printf("[DEV9] [SMAP] Write RXFIFO_CTRL %02x\n", value);
             if (value == SMAP_RXFIFO_RESET) // Reset the fifo?
             {
-                memset(rxfifo, 0, 4096); // maybe
+                rxfifo.reset(); // maybe
                 rxfifo_ctrl = 0;
             }
             if (value & SMAP_TXFIFO_DMAEN)
@@ -187,22 +193,26 @@ void SMAP::write16(uint32_t address, uint16_t value)
             printf("[DEV9] [SMAP] Write INTR_CLR %04x\n", value);
             return;
         case SMAP_REG(SMAP_R_TXFIFO_SIZE):
+            // Misleading reg name? SMAP doesn't control fifo size
+            // this seems to be used for DMA slice count
             printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_SIZE %04x\n", value);
             //txfifo_size = value; DMA Slice count?
             txdma_slice_count = value;
             return;
         case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
             printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_WR_PTR %04x\n", value);
-            txfifo_write_ptr = value;
+            txfifo.write = value;
             return;
         case SMAP_REG(SMAP_R_RXFIFO_SIZE):
+            // Misleading reg name? SMAP doesn't control fifo size
+            // this seems to be used for DMA slice count
             printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_SIZE %04x\n", value);
             //rxfifo_size = value; DMA slice count?
             rxdma_slice_count = value;
             return;
         case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
             printf("[DEV9] [SMAP] Write SMAP_R_RXFIFO_RD_PTR %04x\n", value);
-            rxfifo_read_ptr = value;
+            rxfifo.read = value;
             return;
     }
     printf("[DEV9] [SMAP] Unrecognized SMAP write16 to $%08x of %04x\n", address, value);
@@ -215,10 +225,8 @@ void SMAP::write32(uint32_t address, uint32_t value)
     {
         case SMAP_REG(SMAP_R_TXFIFO_DATA):
         {
-            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo_write_ptr, value);
-            uint32_t* fifo = (uint32_t*)(&txfifo[txfifo_write_ptr]);
-            *fifo = value;
-            txfifo_write_ptr = (txfifo_write_ptr + 4) % txfifo_size;
+            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo.write, value);
+            txfifo.push(value);
             return;
         }
         case EMAC3_REG(SMAP_R_EMAC3_MODE0):
@@ -227,10 +235,9 @@ void SMAP::write32(uint32_t address, uint32_t value)
             {
                 printf("[DEV9] [SMAP] EMAC3 SOFT RESET\n");
                 // TODO: I guess everything should go...
-                std::memset(rxfifo, 0, sizeof(rxfifo));
-                std::memset(txfifo, 0, sizeof(txfifo));
-                rxfifo_read_ptr = 0;
-                txfifo_write_ptr = 0;
+                // maybe...
+                rxfifo.reset();
+                txfifo.reset();
                 emac3_mode0 = 0;
 
                 // on second thought, emac3 reset probably wouldn't do anything to the bds?

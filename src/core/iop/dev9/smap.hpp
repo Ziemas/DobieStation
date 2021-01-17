@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <cstring>
 
 /* SMAP is the network chip of the PS2's network adaptor.
  * It is hooked up to an EMAC very similar to the one on the PPC 405GP
@@ -189,22 +190,48 @@ class SMAP
 
     uint16_t rxdma_slice_count = 0;
     uint32_t rx_bd_index = 0;
-    // Fifo size is configurable by the driver
-    // options are 512, 1kb, 2kb, 4kb
-    uint16_t rxfifo_size = 512;
-    uint8_t rxfifo[4 * 1024] = {};
-    uint16_t rxfifo_write_ptr = 0;
-    uint16_t rxfifo_read_ptr = 0;
 
+    struct Fifo
+    {
+        uint32_t array[1024] = {0};
+        uint16_t capacity = 1024;
+        uint16_t read = 0;
+        uint16_t write = 0;
+
+        uint16_t mask(uint32_t val) { return val & (capacity - 1); }
+
+        uint16_t rpos() { return mask(read); }
+        uint16_t wpos() { return mask(write); }
+
+        uint32_t& front() { return array[mask(read)]; }
+        uint32_t& back() { return array[mask(write)]; }
+        void push(uint32_t val) { array[mask(write++)] = val; }
+        uint32_t pop() { return array[mask(read++)]; }
+        uint32_t size() { return write - read; }
+        bool full() { return size() == capacity; }
+        bool empty() { return read == write; }
+
+        void reset()
+        {
+            std::memset(array, 0, 64);
+            read = 0;
+            write = 0;
+        }
+    };
+
+    // Fifo size is configurable by the driver
+    // TODO: get fifo size from EMAC3 MODE1 reg
+    // RXFIFO options are 512, 1kb, 2kb.
+    Fifo rxfifo = {};
+    // TXFIFO options are 512, 1kb, 2kb, 4kb
+    Fifo txfifo = {};
 
     uint16_t txdma_slice_count = 0;
     uint32_t tx_bd_index = 0;
-    // Fifo size is configurable by the driver
-    // options are 512, 1kb, 2kb.
-    uint16_t txfifo_size = 512;
-    uint8_t txfifo[2 * 1024] = {};
-    uint16_t txfifo_write_ptr = 0;
-    uint16_t txfifo_read_ptr = 0;
+    //uint16_t txfifo_size = 512;
+    //uint8_t txfifo[2 * 1024] = {};
+    //uint16_t txfifo_write_ptr = 0;
+    //uint16_t txfifo_read_ptr = 0;
 
     uint8_t txfifo_ctrl = 0;
     uint8_t rxfifo_ctrl = 0;
