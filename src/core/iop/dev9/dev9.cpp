@@ -1,16 +1,23 @@
 #include "dev9.hpp"
 #include "../iop_dma.hpp"
+#include "../iop_intc.hpp"
 #include <cstdio>
 
 DEV9::DEV9(IOP_INTC* intc, IOP_DMA* dma) : intc(intc), dma(dma), eeprom(nullptr)
 {
 }
 
+
 void DEV9::reset()
 {
     irq_mask = 0;
     irq_stat = 0;
     eeprom = EEPROM(nullptr);
+}
+
+void DEV9::IRQ()
+{
+    intc->assert_irq(13);
 }
 
 uint8_t DEV9::read8(uint32_t address)
@@ -142,7 +149,6 @@ void DEV9::write8(uint32_t address, uint8_t value)
     }
 
     printf("[DEV9] Unrecognized DEV9 write8 to $%08x of $%02x\n", address, value);
-    printf("break here\n");
 }
 
 void DEV9::write16(uint32_t address, uint16_t value)
@@ -218,4 +224,9 @@ void DEV9::write_DMA(uint32_t value)
 void DEV9::request_dma()
 {
     dma->set_DMA_request(9);
+}
+
+void DEV9::clear_dma()
+{
+    dma->clear_DMA_request(9);
 }

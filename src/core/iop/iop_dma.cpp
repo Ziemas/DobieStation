@@ -4,6 +4,7 @@
 #include "iop_intc.hpp"
 #include "sio2.hpp"
 #include "spu/spu.hpp"
+#include "dev9/dev9.hpp"
 
 #include "../errors.hpp"
 #include "../sif.hpp"
@@ -167,9 +168,28 @@ void IOP_DMA::process_SPU2()
 
 void IOP_DMA::process_DEV9()
 {
-    if (channels[IOP_DEV9].word_count)
+    bool write_to_dev9 = channels[IOP_DEV9].control.direction_from;
+
+    if (channels[IOP_DEV9].size)
     {
-        printf("[IOP DMA] Words to copy for DEV9\n");
+        if (write_to_dev9)
+        {
+            uint32_t value = *(uint32_t *)&RAM[channels[IOP_DEV9].addr];
+            dev9->write_DMA(value);
+            channels[IOP_DEV9].size--;
+            channels[IOP_DEV9].addr += 4;
+        }
+        else
+        {
+            printf("[IOP DMA] [DEV9] Read from DEV9\n");
+
+        }
+        //printf("[IOP DMA] Words to copy for DEV9\n");
+    }
+
+    if (channels[IOP_DEV9].size == 0)
+    {
+        transfer_end(IOP_DEV9);
     }
 }
 

@@ -2,8 +2,8 @@
 #define __SMAP_H_
 
 #include <cstdint>
-#include <memory>
 #include <cstring>
+#include <memory>
 
 /* SMAP is the network chip of the PS2's network adaptor.
  * It is hooked up to an EMAC very similar to the one on the PPC 405GP
@@ -21,6 +21,8 @@
 #define SMAP_TXFIFO_DMAEN (1 << 1)
 #define SMAP_R_TXFIFO_WR_PTR 0xf04
 #define SMAP_R_TXFIFO_SIZE 0xf08
+#define SMAP_R_TXFIFO_FRAME_CNT 0xf0C
+#define SMAP_R_TXFIFO_FRAME_INC 0xf10
 #define SMAP_R_TXFIFO_DATA 0x1000
 
 #define SMAP_R_RXFIFO_CTRL 0xf30
@@ -30,8 +32,8 @@
 #define SMAP_R_RXFIFO_SIZE 0xf38
 #define SMAP_R_RXFIFO_DATA 0x1100
 
-#define SMAP_EMAC3_REGBASE 0x1f00
-#define EMAC3_REG(offset) (SMAP_REGBASE + SMAP_EMAC3_REGBASE + (offset))
+#define SMAP_EMAC3_REGBASE 0x10002000
+#define EMAC3_REG(offset) (SMAP_EMAC3_REGBASE + (offset))
 #define SMAP_R_EMAC3_MODE0 0x0
 
 #define SMAP_E3_RXMAC_IDLE (1 << 31)
@@ -43,6 +45,7 @@
 
 #define SMAP_R_EMAC3_MODE1 0x04
 
+#define SMAP_R_EMAC3_TxMODE0 0x08
 #define SMAP_R_EMAC3_TxMODE1 0x0C
 
 #define SMAP_R_EMAC3_RxMODE 0x10
@@ -83,16 +86,6 @@
 #define SMAP_PHY_BMSR_ANEN_AVAIL (1 << 3)
 #define SMAP_PHY_BMSR_ANEN_COMPLETE (1 << 5)
 #define SMAP_PHY_BMSR_100btxfd (1 << 15)
-
-struct smap_bd
-{
-    uint16_t ctrl_stat;
-    /** must be zero */
-    uint16_t reserved;
-    /** number of bytes in pkt */
-    uint16_t length;
-    uint16_t pointer;
-};
 
 class DEV9;
 
@@ -179,6 +172,27 @@ class SMAP
     //std::unique_ptr<smap_bd[64]> rx_bd;
     //std::unique_ptr<smap_bd[64]> tx_bd;
 
+#pragma pack(push, 1)
+    struct FrameHeader
+    {
+        uint8_t dst_mac[6];
+        uint8_t src_mac[6];
+        uint32_t tag;
+        uint16_t len;
+    };
+#pragma pack(pop)
+
+    struct smap_bd
+    {
+        uint16_t ctrl_stat;
+        /** must be zero */
+        uint16_t reserved;
+        /** number of bytes in pkt */
+        uint16_t length;
+        uint16_t pointer;
+    };
+
+
     union bufdesc
     {
         uint16_t raw[64 * 4];
@@ -235,6 +249,9 @@ class SMAP
 
     uint8_t txfifo_ctrl = 0;
     uint8_t rxfifo_ctrl = 0;
+
+
+    void checkBD(smap_bd bd);
 
     void write_phy(uint8_t address, uint16_t value);
     uint16_t read_phy(uint8_t address, uint16_t value);
