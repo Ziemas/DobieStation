@@ -17,10 +17,6 @@ VectorInterface::VectorInterface(GraphicsInterface* gif, VectorUnit* vu, INTC* i
 
 void VectorInterface::reset()
 {
-    std::queue<uint32_t> empty;
-    FIFO.swap(empty);
-    std::queue<uint32_t> empty2;
-    internal_FIFO.swap(empty2);
     command = 0;
     command_len = 0;
     buffer_size = 0;
@@ -54,7 +50,7 @@ void VectorInterface::reset()
         fifo_size = 32;
 }
 
-bool VectorInterface::check_vif_stall(uint32_t value)
+inline bool VectorInterface::check_vif_stall(uint32_t value)
 {
     bool is_stalled = false;
 
@@ -212,7 +208,7 @@ void VectorInterface::update(int cycles)
     }
 }
 
-bool VectorInterface::process_data_word(uint32_t value)
+inline bool VectorInterface::process_data_word(uint32_t value)
 {
     if (command == 0)
     {

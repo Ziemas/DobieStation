@@ -4,6 +4,7 @@
 #include <queue>
 #include <fstream>
 #include <unordered_set>
+#include <cstring>
 
 #include "intc.hpp"
 #include "vu.hpp"
@@ -60,12 +61,33 @@ struct VIF_ERR_REG
 class VectorInterface
 {
     private:
+        struct fifo
+        {
+            uint32_t array[64] {};
+            uint32_t capacity {64};
+
+            uint32_t read {0};
+            uint32_t write {0};
+
+            uint32_t& front() { return array[mask(read)]; }
+            uint32_t& back() { return array[mask(write)]; }
+            uint32_t mask(uint32_t val) { return val & (capacity - 1); }
+            void push(uint32_t val) { array[mask(write++)] = val; }
+            uint32_t pop() { return array[mask(read++)]; }
+            uint32_t size() { return write - read; }
+            bool full() { return size() == capacity; }
+            bool empty() { return read == write; }
+
+            void reset() { memset(array, 0, 64); read = 0; write = 0; }
+        };
+
         GraphicsInterface* gif;
         VectorUnit* vu;
         INTC* intc;
         DMAC* dmac;
-        std::queue<uint32_t> FIFO;
-        std::queue<uint32_t> internal_FIFO;
+        fifo FIFO;
+        fifo internal_FIFO;
+
         int id;
         uint16_t imm;
         uint8_t command;
