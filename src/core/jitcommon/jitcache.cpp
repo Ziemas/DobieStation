@@ -11,12 +11,14 @@
 #include "../errors.hpp"
 #include "jitcache.hpp"
 
+#include "jitprofiling.h"
+
 //////////////
 // JIT Block
 //////////////
 
 JitBlock::JitBlock(const std::string &name) {
-    jit_name = name;
+    strncpy(jit_name, name.c_str(), 20);
 
     // scratch storage for block being build
     // the code starts at block + MAX_LITERALSIZE and grows forward
@@ -626,6 +628,8 @@ EEJitBlockRecord* EEJitHeap::insert_block(uint32_t PC, JitBlock *block)
     record.code_end = (uint8_t*)dest + literal_size + code_size;
     record.block_data.pc = PC;
 
+    prof.Register(record.code_start, code_size, block->get_name());
+
     uint32_t page = PC / 4096;
     EEPageRecord* page_record = lookup_ee_page(page);
 
@@ -640,4 +644,24 @@ EEJitBlockRecord* EEJitHeap::insert_block(uint32_t PC, JitBlock *block)
     assert(idx < 1024);
     page_record->block_array[idx] = record;
     return &page_record->block_array[idx];
+}
+
+ProfInfo::ProfInfo(std::string name)
+{
+    strncpy(jitname, name.c_str(), 19);
+    method_id = iJIT_GetNewMethodID();
+}
+
+void ProfInfo::Register(void *code, uint32_t size, char *name)
+{
+    iJIT_Method_Load_V3 jmethod = {};
+    jmethod.method_id = method_id;
+    //jmethod.method_name = block->get_name().c_str();
+    jmethod.method_name = name;
+    jmethod.module_name = jitname;
+    jmethod.method_load_address = code;
+    jmethod.method_size = size;
+    //printf("Informing VTUNE about block at %p with size %ul\n", jmethod.method_load_address, jmethod.method_size);
+
+    iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED_V3, (void *)&jmethod);
 }

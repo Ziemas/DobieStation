@@ -3,6 +3,10 @@ set(TARGET Core)
 set(CMAKE_CXX_STANDARD 14)
 include(DobieHelpers)
 
+if (USE_VTUNE)
+    find_package(Vtune REQUIRED)
+    set(COMMON_FLAG "${COMMON_FLAG} -DENABLE_VTUNE")
+endif()
 
 set(SOURCES
     emulator.cpp
@@ -180,6 +184,6 @@ set(HEADERS
 add_library(${TARGET} ${SOURCES} ${HEADERS})
 add_library(Dobie::Core ALIAS ${TARGET})
 
-target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(${TARGET} Threads::Threads libchdr zlib)
+target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src ${VTUNE_INCLUDE_DIRS})
+target_link_libraries(${TARGET} Threads::Threads libchdr zlib ${VTUNE_LIBRARIES})
 dobie_cxx_compile_options(${TARGET})

@@ -7,6 +7,7 @@
 #include <string>
 #include "../errors.hpp"
 
+
 /*!
  * A record to keep track of a JIT block in a JIT heap. Points to the x86 code/literals, as well as some block_data
  * which can be specialized for the specific JIT.
@@ -29,7 +30,7 @@ private:
     void *literals_start = nullptr;
     void *code_start = nullptr;
     void *code_end = nullptr;
-    std::string jit_name;
+    char jit_name[20] = {0};
 
 public:
     // all these must have at least 16 byte alignment
@@ -46,6 +47,7 @@ public:
     void set_code_pos(uint8_t *pos);
     void print_block();
     void print_literal_pool();
+    char *get_name() { return jit_name; }
 
     template<typename T>
     uint8_t *get_literal_offset(T literal);
@@ -68,7 +70,7 @@ inline uint8_t *JitBlock::get_literal_offset(T literal) {
     ptr -= 16;
     if (ptr < building_block)
         Errors::die("JIT %s's block is out of room for literals.  Try increasing JIT_MAX_BLOCK_LITERALSIZE",
-                    jit_name.c_str());
+                    jit_name);
     literals_start = ptr;
 
     *(T *) ptr = literal;
@@ -83,10 +85,25 @@ inline void JitBlock::write(T value) {
     code_end = (uint8_t *) code_end + sizeof(T);
 
     if (code_end >= building_block + JIT_MAX_BLOCK_CODESIZE + JIT_MAX_BLOCK_LITERALSIZE) {
-        Errors::die("JIT %s's block is out of room for code.  Try increasing JIT_MAX_BLOCK_CODESIZE", jit_name.c_str());
+        Errors::die("JIT %s's block is out of room for code.  Try increasing JIT_MAX_BLOCK_CODESIZE", jit_name);
     }
 
 }
+
+/*!
+ * Stuff for managing giving profilers info about jitted code
+ */
+
+class ProfInfo
+{
+    public:
+        ProfInfo(std::string name);
+        void Register(void* code, uint32_t size, char *name);
+    private:
+        char jitname[20] = {};
+        uint32_t method_id = 0;
+
+};
 
 
 /*!
@@ -117,6 +134,9 @@ private:
     uint8_t* heap_cur = nullptr;
     uint64_t heap_size = 0;
 
+    ProfInfo prof;
+
+
     void* jit_alloc(std::size_t size)
     {
         std::size_t aligned_size = (size + JIT_HEAP_ALIGN - 1) & ~(JIT_HEAP_ALIGN - 1);
@@ -139,7 +159,7 @@ private:
 
 
 public:
-    explicit JitUnorderedMapHeap(std::size_t size = 0)
+    explicit JitUnorderedMapHeap(std::string name, std::size_t size = 0) : prof(name)
     {
         if(!size)
         {
@@ -205,6 +225,8 @@ public:
         record.code_start = (uint8_t*)dest + literal_size;
         record.code_end = (uint8_t*)dest + literal_size + code_size;
         record.block_data = data;
+
+        prof.Register(record.code_start, code_size, block->get_name());
 
         // add to hash table
         auto it = block_map.insert({data, record}).first;
@@ -360,6 +382,8 @@ private:
     std::unordered_map<uint32_t, EEPageRecord> ee_page_record_map;
     uint64_t page_lookups = 0;
     uint64_t cached_page_lookups = 0;
+
+    ProfInfo prof{"EE"};
 
 public:
     EEJitHeap();

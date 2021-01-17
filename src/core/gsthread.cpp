@@ -78,7 +78,9 @@ constexpr REG_64 GraphicsSynthesizerThread::abi_args[4];
 GraphicsSynthesizerThread::GraphicsSynthesizerThread()
     : frame_complete(false), local_mem(nullptr), jit_draw_pixel_block("GS-pixel"), jit_tex_lookup_block("GS-texture"),
     emitter_dp(&jit_draw_pixel_block),
-      emitter_tex(&jit_tex_lookup_block)
+      emitter_tex(&jit_tex_lookup_block),
+      jit_draw_pixel_heap("DrawPixel"),
+      jit_tex_lookup_heap("TextureLookup")
 {
     //Initialize swizzling tables
     for (int block = 0; block < 32; block++)

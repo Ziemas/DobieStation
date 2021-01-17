@@ -31,7 +31,7 @@
  * https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions
  */
 
-VU_JIT64::VU_JIT64() : jit_block("VU"), emitter(&jit_block)
+VU_JIT64::VU_JIT64() : jit_block("VU"), emitter(&jit_block), jit_heap("VU")
 {
     prologue_block = nullptr;
     for (int i = 0; i < 4; i++)
