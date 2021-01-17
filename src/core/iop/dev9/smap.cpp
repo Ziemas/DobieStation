@@ -38,7 +38,7 @@ uint16_t SMAP::read16(uint32_t address)
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
         uint8_t bd_num = index / 4;
-        printf("[DEV9] [SMAP] RX BD Read from BD%d(%08x) of %04x\n", bd_num, address, rx_bd.raw[index]);
+        printf("[DEV9] [SMAP] RX BD Read from BD %d(%08x) of %04x\n", bd_num, address, rx_bd.raw[index]);
         return rx_bd.raw[index];
     }
 
@@ -78,8 +78,11 @@ uint32_t SMAP::read32(uint32_t address)
         case EMAC3_REG(SMAP_R_EMAC3_MODE1):
             printf("[DEV9] [SMAP] Read EMAC3_MODE0 %08x\n", emac3_mode1);
             return EMAC3_WSWAP(emac3_mode1);
+        case EMAC3_REG(SMAP_R_EMAC3_TxMODE0):
+            printf("[DEV9] [SMAP] Read EMAC3_TXMODE0 %08x\n", 0);
+            return 0;
         case EMAC3_REG(SMAP_R_EMAC3_TxMODE1):
-            printf("[DEV9] [SMAP] Read EMAC3_TXMODE0 %08x\n", emac3_txmode1);
+            printf("[DEV9] [SMAP] Read EMAC3_TXMODE1 %08x\n", emac3_txmode1);
             return EMAC3_WSWAP(emac3_txmode1);
         case EMAC3_REG(SMAP_R_EMAC3_RxMODE):
             printf("[DEV9] [SMAP] Read EMAC3_RXMODE %08x\n", emac3_rxmode);
@@ -150,6 +153,12 @@ void SMAP::write8(uint32_t address, uint8_t value)
                 dev9.request_dma();
             }
             return;
+        case SMAP_REG(SMAP_R_TXFIFO_FRAME_CNT):
+            printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_FRAME_CNT %02x\n", value);
+            return;
+        case SMAP_REG(SMAP_R_TXFIFO_FRAME_INC):
+            printf("[DEV9] [SMAP] Write SMAP_R_TXFIFO_FRAME_INC %02x\n", value);
+            return;
         case SMAP_REG(SMAP_R_RXFIFO_CTRL):
             printf("[DEV9] [SMAP] Write RXFIFO_CTRL %02x\n", value);
             if (value == SMAP_RXFIFO_RESET) // Reset the fifo?
@@ -169,21 +178,48 @@ void SMAP::write8(uint32_t address, uint8_t value)
     return;
 }
 
+void SMAP::checkBD(smap_bd bd)
+{
+    // Just for fun we can check what it wants to transfer
+    if (bd.ctrl_stat & (1 << 15))
+    {
+        printf("DEV9 bd ready: DST ");
+        FrameHeader fh = *(FrameHeader*)&txfifo.array[bd.pointer - 0x1000];
+
+        for (int i = 0; i < 6; i++)
+        {
+            printf("%02x ", fh.dst_mac[i]);
+        }
+
+        printf(" | SRC: ");
+
+        for (int i = 0; i < 6; i++)
+        {
+            printf("%02x ", fh.src_mac[i]);
+        }
+        printf("| tag: %08x ", fh.tag);
+        printf("| len: %04x\n", fh.len);
+    }
+}
+
 void SMAP::write16(uint32_t address, uint16_t value)
 {
     if (address >= SMAP_REG(SMAP_BD_TX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE))
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_TX_BASE)) / 2;
         uint8_t bd_num = index / 4;
-        printf("[DEV9] [SMAP] TX BD Write to BD %d(%08x) of %04x\n", bd_num, address, value);
+
+        printf("[DEV9] [SMAP] TX BD Write to BD %d(%08x) of %04x\n", bd_num, index, value);
+
         tx_bd.raw[index] = value;
+        //checkBD(tx_bd.bd[bd_num]);
         return;
     }
     if (address >= SMAP_REG(SMAP_BD_RX_BASE) && address < SMAP_REG(SMAP_BD_RX_BASE) + 0x200)
     {
         uint32_t index = (address - SMAP_REG(SMAP_BD_RX_BASE)) / 2;
         uint8_t bd_num = index / 4;
-        printf("[DEV9] [SMAP] RX BD Write to BD%d(%08x) of %04x\n", bd_num, address, value);
+        printf("[DEV9] [SMAP] RX BD Write to BD %d(%08x) of %04x\n", bd_num, address, value);
         rx_bd.raw[index] = value;
         return;
     }
@@ -221,109 +257,130 @@ void SMAP::write16(uint32_t address, uint16_t value)
 
 void SMAP::write32(uint32_t address, uint32_t value)
 {
-    switch (address)
+    if (address >= SMAP_REGBASE && address < SMAP_EMAC3_REGBASE)
     {
-        case SMAP_REG(SMAP_R_TXFIFO_DATA):
+        switch (address)
         {
-            printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo.write, value);
-            txfifo.push(value);
-            return;
-        }
-        case EMAC3_REG(SMAP_R_EMAC3_MODE0):
-            printf("[DEV9] [SMAP] Write EMAC3_MODE0($%08x) %08x\n", address, EMAC3_WSWAP(value));
-            if (value == EMAC3_WSWAP(SMAP_E3_SOFT_RESET))
+            case SMAP_REG(SMAP_R_TXFIFO_DATA):
             {
-                printf("[DEV9] [SMAP] EMAC3 SOFT RESET\n");
-                // TODO: I guess everything should go...
-                // maybe...
-                rxfifo.reset();
-                txfifo.reset();
-                emac3_mode0 = 0;
-
-                // on second thought, emac3 reset probably wouldn't do anything to the bds?
-                for (auto& bd : rx_bd.bd)
-                {
-                    bd.ctrl_stat = 0;
-                    bd.reserved = 0;
-                    bd.length = 0;
-                    bd.pointer = 0;
-                }
-
-                for (auto& bd : tx_bd.bd)
-                {
-                    bd.ctrl_stat = 0;
-                    bd.reserved = 0;
-                    bd.length = 0;
-                    bd.pointer = 0;
-                }
+                printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo.write, value);
+                txfifo.push(value);
+                return;
             }
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_MODE1):
-            printf("[DEV9] [SMAP] Write EMAC3_MODE1 %08x\n", EMAC3_WSWAP(value));
-            emac3_mode1 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_TxMODE1):
-            printf("[DEV9] [SMAP] Write EMAC3_TXMODE1 %08x\n", EMAC3_WSWAP(value));
-            emac3_txmode1 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_RxMODE):
-            printf("[DEV9] [SMAP] Write EMAC3_RXMODE %08x\n", EMAC3_WSWAP(value));
-            emac3_rxmode = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_INTR_STAT):
-            printf("[DEV9] [SMAP] Write EMAC3_INTR_STAT %08x\n", EMAC3_WSWAP(value));
-            emac3_intr_stat = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_INTR_ENABLE):
-            printf("[DEV9] [SMAP] Write EMAC3_INTR_ENABLE %08x\n", EMAC3_WSWAP(value));
-            emac3_intr_enable = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_ADDR_HI):
-            printf("[DEV9] [SMAP] Write EMAC3_ADDR_HI %08x\n", EMAC3_WSWAP(value));
-            mac_address &= mac_address & 0xFFFFFFFF;
-            mac_address |= (uint64_t)(EMAC3_WSWAP(value)) << 32;
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_ADDR_LO):
-            printf("[DEV9] [SMAP] Write EMAC3_ADDR_LO %08x\n", EMAC3_WSWAP(value));
-            mac_address &= 0xFFFF00000000;
-            mac_address |= EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_PAUSE_TIMER):
-            printf("[DEV9] [SMAP] Write EMAC3_PAUSE_TIMER %08x\n", EMAC3_WSWAP(value));
-            emac3_pause_timer = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH1):
-            printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH1 %08x\n", EMAC3_WSWAP(value));
-            emac3_group_hash1 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH2):
-            printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH2 %08x\n", EMAC3_WSWAP(value));
-            emac3_group_hash2 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH3):
-            printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH3 %08x\n", EMAC3_WSWAP(value));
-            emac3_group_hash3 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH4):
-            printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH4 %08x\n", EMAC3_WSWAP(value));
-            emac3_group_hash4 = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_INTER_FRAME_GAP):
-            printf("[DEV9] [SMAP] Write EMAC3_INTR_FRAME_GAP %08x\n", EMAC3_WSWAP(value));
-            emac3_inter_frame_gap = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_TX_THRESHOLD):
-            printf("[DEV9] [SMAP] Write EMAC3_TX_THRESHOLD %08x\n", EMAC3_WSWAP(value));
-            emac3_tx_threshold = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_RX_WATERMARK):
-            printf("[DEV9] [SMAP] Write EMAC3_RX_WATERMARK %08x\n", EMAC3_WSWAP(value));
-            emac3_rx_watermark = EMAC3_WSWAP(value);
-            return;
-        case EMAC3_REG(SMAP_R_EMAC3_STA_CTRL):
-            write_sta(value);
-            return;
+        }
+
+        printf("[DEV9] [SMAP] Write to unknown SMAP register %08x of %08x\n", address, value);
+        return;
     }
+
+    if (address >= SMAP_EMAC3_REGBASE && address < SMAP_REG(SMAP_BD_REGBASE))
+    {
+        switch (address)
+        {
+            case EMAC3_REG(SMAP_R_EMAC3_MODE0):
+                printf("[DEV9] [SMAP] Write EMAC3_MODE0($%08x) %08x\n", address, EMAC3_WSWAP(value));
+                if (value == EMAC3_WSWAP(SMAP_E3_SOFT_RESET))
+                {
+                    printf("[DEV9] [SMAP] EMAC3 SOFT RESET\n");
+                    // TODO: I guess everything should go...
+                    // maybe...
+                    rxfifo.reset();
+                    txfifo.reset();
+                    emac3_mode0 = 0;
+
+                    // on second thought, emac3 reset probably wouldn't do anything to the bds?
+                    for (auto& bd : rx_bd.bd)
+                    {
+                        bd.ctrl_stat = 0;
+                        bd.reserved = 0;
+                        bd.length = 0;
+                        bd.pointer = 0;
+                    }
+
+                    for (auto& bd : tx_bd.bd)
+                    {
+                        bd.ctrl_stat = 0;
+                        bd.reserved = 0;
+                        bd.length = 0;
+                        bd.pointer = 0;
+                    }
+                }
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_MODE1):
+                printf("[DEV9] [SMAP] Write EMAC3_MODE1 %08x\n", EMAC3_WSWAP(value));
+                emac3_mode1 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_TxMODE0):
+                // TODO: This is what gets poked when the driver wants to transmit a frame
+                printf("[DEV9] [SMAP] Write EMAC3_TxMODE0 %08x\n", EMAC3_WSWAP(value));
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_TxMODE1):
+                printf("[DEV9] [SMAP] Write EMAC3_TxMODE1 %08x\n", EMAC3_WSWAP(value));
+                emac3_txmode1 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_RxMODE):
+                printf("[DEV9] [SMAP] Write EMAC3_RXMODE %08x\n", EMAC3_WSWAP(value));
+                emac3_rxmode = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_INTR_STAT):
+                printf("[DEV9] [SMAP] Write EMAC3_INTR_STAT %08x\n", EMAC3_WSWAP(value));
+                emac3_intr_stat = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_INTR_ENABLE):
+                printf("[DEV9] [SMAP] Write EMAC3_INTR_ENABLE %08x\n", EMAC3_WSWAP(value));
+                emac3_intr_enable = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_ADDR_HI):
+                printf("[DEV9] [SMAP] Write EMAC3_ADDR_HI %08x\n", EMAC3_WSWAP(value));
+                mac_address &= mac_address & 0xFFFFFFFF;
+                mac_address |= (uint64_t)(EMAC3_WSWAP(value)) << 32;
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_ADDR_LO):
+                printf("[DEV9] [SMAP] Write EMAC3_ADDR_LO %08x\n", EMAC3_WSWAP(value));
+                mac_address &= 0xFFFF00000000;
+                mac_address |= EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_PAUSE_TIMER):
+                printf("[DEV9] [SMAP] Write EMAC3_PAUSE_TIMER %08x\n", EMAC3_WSWAP(value));
+                emac3_pause_timer = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH1):
+                printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH1 %08x\n", EMAC3_WSWAP(value));
+                emac3_group_hash1 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH2):
+                printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH2 %08x\n", EMAC3_WSWAP(value));
+                emac3_group_hash2 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH3):
+                printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH3 %08x\n", EMAC3_WSWAP(value));
+                emac3_group_hash3 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_GROUP_HASH4):
+                printf("[DEV9] [SMAP] Write EMAC3_GROUP_HASH4 %08x\n", EMAC3_WSWAP(value));
+                emac3_group_hash4 = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_INTER_FRAME_GAP):
+                printf("[DEV9] [SMAP] Write EMAC3_INTR_FRAME_GAP %08x\n", EMAC3_WSWAP(value));
+                emac3_inter_frame_gap = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_TX_THRESHOLD):
+                printf("[DEV9] [SMAP] Write EMAC3_TX_THRESHOLD %08x\n", EMAC3_WSWAP(value));
+                emac3_tx_threshold = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_RX_WATERMARK):
+                printf("[DEV9] [SMAP] Write EMAC3_RX_WATERMARK %08x\n", EMAC3_WSWAP(value));
+                emac3_rx_watermark = EMAC3_WSWAP(value);
+                return;
+            case EMAC3_REG(SMAP_R_EMAC3_STA_CTRL):
+                write_sta(value);
+                return;
+        }
+
+        printf("[DEV9] [SMAP] Write to unknown EMAC3 register %08x of %08x\n", address, value);
+        return;
+    }
+
     printf("[DEV9] [SMAP] Unrecognized SMAP write32 to $%08x of %08x\n", address, value);
     return;
 }
@@ -396,12 +453,12 @@ void SMAP::write_phy(uint8_t address, uint16_t value)
 
 void SMAP::write_DMA(uint32_t value)
 {
-    printf("[DEV9] [SMAP] DMA Write of %08x", value);
-
+    printf("[DEV9] [SMAP] DMA Write of %08x\n", value);
+    txfifo.push(value);
 }
 
 uint32_t SMAP::read_DMA()
 {
-    printf("[DEV9] [SMAP] DMA read");
+    printf("[DEV9] [SMAP] DMA read\n");
     return 0;
 }

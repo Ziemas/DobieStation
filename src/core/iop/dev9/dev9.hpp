@@ -45,6 +45,9 @@ class DEV9
     void reset();
 
     void request_dma();
+    void clear_dma();
+
+    void IRQ();
 
     uint32_t read_DMA();
     void write_DMA(uint32_t value);
