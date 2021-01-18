@@ -79,6 +79,7 @@ class DEV9
 
     uint16_t dma_ctrl = 0;
 
+    // bit 0 and 1 are ATA, next 6 are smap
     uint16_t irq_stat = 0;
     uint16_t irq_mask = 0;
 
