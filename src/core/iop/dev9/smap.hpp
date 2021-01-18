@@ -205,29 +205,33 @@ class SMAP
     uint16_t rxdma_slice_count = 0;
     uint32_t rx_bd_index = 0;
 
-    struct Fifo
+    // If element count is not a power two this will not work
+    template <typename _Tp, size_t _Nm>
+    class Fifo
     {
-        uint32_t array[1024] = {0};
-        uint16_t capacity = 1024;
-        uint16_t read = 0;
-        uint16_t write = 0;
+      public:
+        std::array<_Tp, _Nm> array = {};
+        size_t capacity = _Nm;
+        size_t read = {};
+        size_t write = {};
 
-        uint16_t mask(uint32_t val) { return val & (capacity - 1); }
+        size_t mask(size_t val) { return val & (capacity - 1); }
 
-        uint16_t rpos() { return mask(read); }
-        uint16_t wpos() { return mask(write); }
+        size_t rpos() { return mask(read); }
+        size_t wpos() { return mask(write); }
 
-        uint32_t& front() { return array[mask(read)]; }
-        uint32_t& back() { return array[mask(write)]; }
-        void push(uint32_t val) { array[mask(write++)] = val; }
-        uint32_t pop() { return array[mask(read++)]; }
-        uint32_t size() { return write - read; }
+        _Tp& front() { return array[mask(read)]; }
+        _Tp& back() { return array[mask(write)]; }
+        _Tp pop() { return array[mask(read++)]; }
+        void push(_Tp val) { array[mask(write++)] = val; }
+
+        size_t size() { return write - read; }
         bool full() { return size() == capacity; }
         bool empty() { return read == write; }
 
         void reset()
         {
-            std::memset(array, 0, 64);
+            array.fill(_Tp{});
             read = 0;
             write = 0;
         }
@@ -236,9 +240,9 @@ class SMAP
     // Fifo size is configurable by the driver
     // TODO: get fifo size from EMAC3 MODE1 reg
     // RXFIFO options are 512, 1kb, 2kb.
-    Fifo rxfifo = {};
+    Fifo<uint32_t, 4096> rxfifo = {};
     // TXFIFO options are 512, 1kb, 2kb, 4kb
-    Fifo txfifo = {};
+    Fifo<uint32_t, 4096> txfifo = {};
 
     uint16_t txdma_slice_count = 0;
     uint32_t tx_bd_index = 0;
