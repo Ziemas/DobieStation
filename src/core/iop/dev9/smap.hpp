@@ -177,8 +177,7 @@ class SMAP
     {
         uint8_t dst_mac[6];
         uint8_t src_mac[6];
-        uint32_t tag;
-        uint16_t len;
+        uint16_t type;
     };
 #pragma pack(pop)
 

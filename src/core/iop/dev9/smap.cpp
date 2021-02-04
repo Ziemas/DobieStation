@@ -183,22 +183,30 @@ void SMAP::checkBD(smap_bd bd)
     // Just for fun we can check what it wants to transfer
     if (bd.ctrl_stat & (1 << 15))
     {
-        printf("DEV9 bd ready: DST ");
+        printf("DEV9 tx bd ready; DST: ");
         FrameHeader fh = *(FrameHeader*)&txfifo.array[bd.pointer - 0x1000];
 
         for (int i = 0; i < 6; i++)
         {
-            printf("%02x ", fh.dst_mac[i]);
+            printf(":%02X", fh.dst_mac[i]);
         }
 
         printf(" | SRC: ");
 
         for (int i = 0; i < 6; i++)
         {
-            printf("%02x ", fh.src_mac[i]);
+            printf(":%02X", fh.src_mac[i]);
         }
-        printf("| tag: %08x ", fh.tag);
-        printf("| len: %04x\n", fh.len);
+        printf("| type: %04x ", __builtin_bswap16(fh.type));
+        //printf("| len: %04x\n", fh.len);
+        printf("| len: %04x\n", bd.length);
+
+        for (int i = 0; i < bd.length; i++)
+        {
+            printf("%08x", __builtin_bswap32(txfifo.array[bd.pointer-0x1000+i]));
+        }
+
+        printf("\n");
     }
 }
 
