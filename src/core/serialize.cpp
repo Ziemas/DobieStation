@@ -1,5 +1,6 @@
 #include <fstream>
 #include <cstring>
+#include "serialize.hpp"
 #include "emulator.hpp"
 
 #define VER_MAJOR 0
@@ -34,7 +35,7 @@ void Emulator::load_state(const char *file_name)
 {
     load_requested = false;
     printf("[Emulator] Loading state...\n");
-    ifstream state(file_name, ios::binary);
+    fstream state(file_name, ios::binary | fstream::in);
     if (!state.is_open())
     {
         Errors::non_fatal("Failed to load save state");
@@ -63,57 +64,10 @@ void Emulator::load_state(const char *file_name)
         return;
     }
 
+    StateSerializer ss(state, StateSerializer::Mode::Read);
+    do_state(ss);
+
     reset();
-
-    //Emulator info
-    state.read((char*)&VBLANK_sent, sizeof(VBLANK_sent));
-    state.read((char*)&frames, sizeof(frames));
-
-    //RAM
-    state.read((char*)RDRAM, 1024 * 1024 * 32);
-    state.read((char*)IOP_RAM, 1024 * 1024 * 2);
-    state.read((char*)SPU_RAM, 1024 * 1024 * 2);
-    state.read((char*)scratchpad, 1024 * 16);
-    state.read((char*)iop_scratchpad, 1024);
-    state.read((char*)&iop_scratchpad_start, sizeof(iop_scratchpad_start));
-
-    //CPUs
-    cpu.load_state(state);
-    cp0.load_state(state);
-    fpu.load_state(state);
-    iop.load_state(state);
-    vu0.load_state(state);
-    vu1.load_state(state);
-
-    //Interrupt registers
-    intc.load_state(state);
-    iop_intc.load_state(state);
-
-    //Timers
-    timers.load_state(state);
-    iop_timers.load_state(state);
-
-    //DMA
-    dmac.load_state(state);
-    iop_dma.load_state(state);
-
-    //"Interfaces"
-    gif.load_state(state);
-    sif.load_state(state);
-    vif0.load_state(state);
-    vif1.load_state(state);
-
-    //CDVD
-    cdvd.load_state(state);
-
-    //GS
-    //Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
-    gs.load_state(state);
-
-    scheduler.load_state(state);
-    pad.load_state(state);
-    spu.load_state(state);
-    spu2.load_state(state);
 
     state.close();
     printf("[Emulator] Success!\n");
@@ -122,8 +76,11 @@ void Emulator::load_state(const char *file_name)
 void Emulator::save_state(const char *file_name)
 {
     save_requested = false;
+
+    std::vector<char> data = {};
+
     printf("[Emulator] Saving state...\n");
-    ofstream state(file_name, ios::binary);
+    fstream state(file_name, ios::binary | fstream::out | fstream::trunc);
     if (!state.is_open())
     {
         Errors::non_fatal("Failed to save state");
@@ -140,150 +97,117 @@ void Emulator::save_state(const char *file_name)
     state.write((char*)&minor, sizeof(uint32_t));
     state.write((char*)&rev, sizeof(uint32_t));
 
-    //Emulator info
-    state.write((char*)&VBLANK_sent, sizeof(VBLANK_sent));
-    state.write((char*)&frames, sizeof(frames));
-
-    //RAM
-    state.write((char*)RDRAM, 1024 * 1024 * 32);
-    state.write((char*)IOP_RAM, 1024 * 1024 * 2);
-    state.write((char*)SPU_RAM, 1024 * 1024 * 2);
-    state.write((char*)scratchpad, 1024 * 16);
-    state.write((char*)iop_scratchpad, 1024);
-    state.write((char*)&iop_scratchpad_start, sizeof(iop_scratchpad_start));
-
-    //CPUs
-    cpu.save_state(state);
-    cp0.save_state(state);
-    fpu.save_state(state);
-    iop.save_state(state);
-    vu0.save_state(state);
-    vu1.save_state(state);
-
-    //Interrupt registers
-    intc.save_state(state);
-    iop_intc.save_state(state);
-
-    //Timers
-    timers.save_state(state);
-    iop_timers.save_state(state);
-
-    //DMA
-    dmac.save_state(state);
-    iop_dma.save_state(state);
-
-    //"Interfaces"
-    gif.save_state(state);
-    sif.save_state(state);
-    vif0.save_state(state);
-    vif1.save_state(state);
-
-    //CDVD
-    cdvd.save_state(state);
-
-    //GS
-    //Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
-    gs.save_state(state);
-
-    scheduler.save_state(state);
-    pad.save_state(state);
-    spu.save_state(state);
-    spu2.save_state(state);
+    StateSerializer ss(state, StateSerializer::Mode::Write);
+    do_state(ss);
 
     state.close();
     printf("Success!\n");
 }
 
-void EmotionEngine::load_state(ifstream &state)
+void Emulator::do_state(StateSerializer state)
 {
-    state.read((char*)&cycle_count, sizeof(cycle_count));
-    state.read((char*)&cycles_to_run, sizeof(cycles_to_run));
-    state.read((char*)&icache, sizeof(icache));
-    state.read((char*)&gpr, sizeof(gpr));
-    state.read((char*)&LO, sizeof(uint64_t));
-    state.read((char*)&HI, sizeof(uint64_t));
-    state.read((char*)&LO.hi, sizeof(uint64_t));
-    state.read((char*)&HI.hi, sizeof(uint64_t));
-    state.read((char*)&PC, sizeof(uint32_t));
-    state.read((char*)&new_PC, sizeof(uint32_t));
-    state.read((char*)&SA, sizeof(uint64_t));
+    //Emulator info
+    state.Do(&VBLANK_sent);
+    state.Do(&frames);
+
+    //RAM
+    state.DoBytes(RDRAM, 1024 * 1024 * 32);
+    state.DoBytes(IOP_RAM, 1024 * 1024 * 2);
+    state.DoBytes(SPU_RAM, 1024 * 1024 * 2);
+    state.DoBytes(scratchpad, 1024 * 16);
+    state.DoBytes(iop_scratchpad, 1024);
+    state.Do(&iop_scratchpad_start);
+
+    //CPUs
+    cpu.do_state(state);
+    cp0.do_state(state);
+    //fpu.load_state(ss);
+    //iop.load_state(ss);
+    //vu0.load_state(ss);
+    //vu1.load_state(ss);
+
+    ////Interrupt registers
+    //intc.load_state(ss);
+    //iop_intc.load_state(ss);
+
+    ////Timers
+    //timers.load_state(ss);
+    //iop_timers.load_state(ss);
+
+    ////DMA
+    //dmac.load_state(ss);
+    //iop_dma.load_state(ss);
+
+    ////"Interfaces"
+    //gif.load_state(ss);
+    //sif.load_state(ss);
+    //vif0.load_state(ss);
+    //vif1.load_state(ss);
+
+    ////CDVD
+    //cdvd.load_state(ss);
+
+    ////GS
+    ////Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
+    //gs.load_state(ss);
+
+    //scheduler.load_state(ss);
+    //pad.load_state(ss);
+    //spu.load_state(ss);
+    //spu2.load_state(ss);
+}
+
+
+void EmotionEngine::do_state(StateSerializer state)
+{
+    state.Do(&cycle_count);
+    state.Do(&cycles_to_run);
+    state.Do(&icache);
+    state.Do(&gpr);
+    state.Do(&LO);
+    state.Do(&HI);
+    state.Do(&LO.hi);
+    state.Do(&HI.hi);
+    state.Do(&PC);
+    state.Do(&new_PC);
+    state.Do(&SA);
 
     //state.read((char*)&IRQ_raised, sizeof(IRQ_raised));
-    state.read((char*)&wait_for_IRQ, sizeof(wait_for_IRQ));
-    state.read((char*)&branch_on, sizeof(branch_on));
-    state.read((char*)&delay_slot, sizeof(delay_slot));
+    state.Do(&wait_for_IRQ);
+    state.Do(&branch_on);
+    state.Do(&delay_slot);
 
-    state.read((char*)&deci2size, sizeof(deci2size));
-    state.read((char*)&deci2handlers, sizeof(Deci2Handler) * deci2size);
+    state.Do(&deci2size);
+    state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
 }
 
-void EmotionEngine::save_state(ofstream &state)
+void Cop0::do_state(StateSerializer state)
 {
-    state.write((char*)&cycle_count, sizeof(cycle_count));
-    state.write((char*)&cycles_to_run, sizeof(cycles_to_run));
-    state.write((char*)&icache, sizeof(icache));
-    state.write((char*)&gpr, sizeof(gpr));
-    state.write((char*)&LO, sizeof(uint64_t));
-    state.write((char*)&HI, sizeof(uint64_t));
-    state.write((char*)&LO.lo, sizeof(uint64_t));
-    state.write((char*)&HI.hi, sizeof(uint64_t));
-    state.write((char*)&PC, sizeof(uint32_t));
-    state.write((char*)&new_PC, sizeof(uint32_t));
-    state.write((char*)&SA, sizeof(uint64_t));
+    state.DoArray(&gpr, 32);
+    state.Do(&status);
+    state.Do(&cause);
+    state.Do(&EPC);
+    state.Do(&ErrorEPC);
+    state.Do(&PCCR);
+    state.Do(&PCR0);
+    state.Do(&PCR1);
+    state.DoArray(&tlb, 48);
 
-    //state.write((char*)&IRQ_raised, sizeof(IRQ_raised));
-    state.write((char*)&wait_for_IRQ, sizeof(wait_for_IRQ));
-    state.write((char*)&branch_on, sizeof(branch_on));
-    state.write((char*)&delay_slot, sizeof(delay_slot));
-
-    state.write((char*)&deci2size, sizeof(deci2size));
-    state.write((char*)&deci2handlers, sizeof(Deci2Handler) * deci2size);
+    if (state.GetMode() == StateSerializer::Mode::Read)
+    {
+        //Repopulate VTLB
+        for (int i = 0; i < 48; i++)
+            map_tlb(&tlb[i]);
+    }
 }
 
-void Cop0::load_state(ifstream &state)
+void Cop1::do_state(StateSerializer state)
 {
-    state.read((char*)&gpr, sizeof(gpr));
-    state.read((char*)&status, sizeof(status));
-    state.read((char*)&cause, sizeof(cause));
-    state.read((char*)&EPC, sizeof(EPC));
-    state.read((char*)&ErrorEPC, sizeof(ErrorEPC));
-    state.read((char*)&PCCR, sizeof(PCCR));
-    state.read((char*)&PCR0, sizeof(PCR0));
-    state.read((char*)&PCR1, sizeof(PCR1));
-    state.read((char*)&tlb, sizeof(tlb));
-
-    //Repopulate VTLB
-    for (int i = 0; i < 48; i++)
-        map_tlb(&tlb[i]);
-}
-
-void Cop0::save_state(ofstream &state)
-{
-    state.write((char*)&gpr, sizeof(gpr));
-    state.write((char*)&status, sizeof(status));
-    state.write((char*)&cause, sizeof(cause));
-    state.write((char*)&EPC, sizeof(EPC));
-    state.write((char*)&ErrorEPC, sizeof(ErrorEPC));
-    state.write((char*)&PCCR, sizeof(PCCR));
-    state.write((char*)&PCR0, sizeof(PCR0));
-    state.write((char*)&PCR1, sizeof(PCR1));
-    state.write((char*)&tlb, sizeof(tlb));
-}
-
-void Cop1::load_state(ifstream &state)
-{
-    for (int i = 0; i < 32; i++)
-        state.read((char*)&gpr[i].u, sizeof(uint32_t));
-    state.read((char*)&accumulator.u, sizeof(uint32_t));
-    state.read((char*)&control, sizeof(control));
-}
-
-void Cop1::save_state(ofstream &state)
-{
-    for (int i = 0; i < 32; i++)
-        state.write((char*)&gpr[i].u, sizeof(uint32_t));
-    state.write((char*)&accumulator.u, sizeof(uint32_t));
-    state.write((char*)&control, sizeof(control));
+    //for (int i = 0; i < 32; i++)
+    //    state.read((char*)&gpr[i].u, sizeof(uint32_t));
+    state.DoArray(&gpr, 32);
+    state.Do(&accumulator);
+    state.Do(&control);
 }
 
 void IOP::load_state(ifstream &state)
