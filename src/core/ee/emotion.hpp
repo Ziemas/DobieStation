@@ -215,7 +215,7 @@ class EmotionEngine
         void qmtc2(int source, int cop_reg);
         void cop2_updatevu0();
 
-        void do_state(StateSerializer state);
+        void do_state(StateSerializer &state);
 
         //Friends needed for JIT convenience
         friend class EE_JIT64;

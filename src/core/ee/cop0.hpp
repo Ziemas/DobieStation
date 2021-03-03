@@ -130,7 +130,7 @@ class Cop0
         void set_tlb_modified(size_t page);
         bool get_tlb_modified(size_t page) const;
 
-        void do_state(StateSerializer ss);
+        void do_state(StateSerializer &state);
 
         //Friends needed for JIT convenience
         friend class EE_JIT64;

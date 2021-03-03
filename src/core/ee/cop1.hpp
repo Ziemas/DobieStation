@@ -78,7 +78,7 @@ class Cop1
         void c_eq_s(int reg1, int reg2);
         void c_le_s(int reg1, int reg2);
 
-        void do_state(StateSerializer ss);
+        void do_state(StateSerializer &state);
 
         //Friends needed for JIT convenience
         friend class EE_JIT64;

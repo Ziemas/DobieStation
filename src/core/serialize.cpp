@@ -104,7 +104,7 @@ void Emulator::save_state(const char *file_name)
     printf("Success!\n");
 }
 
-void Emulator::do_state(StateSerializer state)
+void Emulator::do_state(StateSerializer &state)
 {
     //Emulator info
     state.Do(&VBLANK_sent);
@@ -121,14 +121,14 @@ void Emulator::do_state(StateSerializer state)
     //CPUs
     cpu.do_state(state);
     cp0.do_state(state);
-    //fpu.load_state(ss);
-    //iop.load_state(ss);
-    //vu0.load_state(ss);
-    //vu1.load_state(ss);
+    fpu.do_state(state);
+    iop.do_state(state);
+    vu0.do_state(state);
+    vu1.do_state(state);
 
-    ////Interrupt registers
-    //intc.load_state(ss);
-    //iop_intc.load_state(ss);
+    //Interrupt registers
+    intc.do_state(state);
+    iop_intc.do_state(state);
 
     ////Timers
     //timers.load_state(ss);
@@ -158,7 +158,7 @@ void Emulator::do_state(StateSerializer state)
 }
 
 
-void EmotionEngine::do_state(StateSerializer state)
+void EmotionEngine::do_state(StateSerializer &state)
 {
     state.Do(&cycle_count);
     state.Do(&cycles_to_run);
@@ -181,7 +181,7 @@ void EmotionEngine::do_state(StateSerializer state)
     state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
 }
 
-void Cop0::do_state(StateSerializer state)
+void Cop0::do_state(StateSerializer &state)
 {
     state.DoArray(&gpr, 32);
     state.Do(&status);
@@ -201,7 +201,7 @@ void Cop0::do_state(StateSerializer state)
     }
 }
 
-void Cop1::do_state(StateSerializer state)
+void Cop1::do_state(StateSerializer &state)
 {
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t));
@@ -210,227 +210,117 @@ void Cop1::do_state(StateSerializer state)
     state.Do(&control);
 }
 
-void IOP::load_state(ifstream &state)
+void IOP::do_state(StateSerializer &state)
 {
-    state.read((char*)&gpr, sizeof(gpr));
-    state.read((char*)&LO, sizeof(LO));
-    state.read((char*)&HI, sizeof(HI));
-    state.read((char*)&PC, sizeof(PC));
-    state.read((char*)&new_PC, sizeof(new_PC));
-    state.read((char*)&icache, sizeof(icache));
+    state.DoArray(&gpr, 32);
+    state.Do(&LO);
+    state.Do(&HI);
+    state.Do(&PC);
+    state.Do(&new_PC);
+    state.DoArray(&icache, 256);
 
-    state.read((char*)&branch_delay, sizeof(branch_delay));
-    state.read((char*)&will_branch, sizeof(branch_delay));
-    state.read((char*)&wait_for_IRQ, sizeof(wait_for_IRQ));
+    state.Do(&branch_delay);
+    state.Do(&will_branch);
+    state.Do(&wait_for_IRQ);
 
     //COP0
-    state.read((char*)&cop0.status, sizeof(cop0.status));
-    state.read((char*)&cop0.cause, sizeof(cop0.cause));
-    state.read((char*)&cop0.EPC, sizeof(cop0.EPC));
+    state.Do(&cop0.status);
+    state.Do(&cop0.cause);
+    state.Do(&cop0.EPC);
 }
 
-void IOP::save_state(ofstream &state)
+void VectorUnit::do_state(StateSerializer &state)
 {
-    state.write((char*)&gpr, sizeof(gpr));
-    state.write((char*)&LO, sizeof(LO));
-    state.write((char*)&HI, sizeof(HI));
-    state.write((char*)&PC, sizeof(PC));
-    state.write((char*)&new_PC, sizeof(new_PC));
-    state.write((char*)&icache, sizeof(icache));
+    //for (int i = 0; i < 32; i++)
+    //    state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
+    state.DoArray(&gpr, 32);
+    state.DoArray(&int_gpr, 32);
+    state.Do(&decoder);
 
-    state.write((char*)&branch_delay, sizeof(branch_delay));
-    state.write((char*)&will_branch, sizeof(branch_delay));
-    state.write((char*)&wait_for_IRQ, sizeof(wait_for_IRQ));
-
-    //COP0
-    state.write((char*)&cop0.status, sizeof(cop0.status));
-    state.write((char*)&cop0.cause, sizeof(cop0.cause));
-    state.write((char*)&cop0.EPC, sizeof(cop0.EPC));
-}
-
-void VectorUnit::load_state(ifstream &state)
-{
-    for (int i = 0; i < 32; i++)
-        state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
-    state.read((char*)&int_gpr, sizeof(int_gpr));
-    state.read((char*)&decoder, sizeof(decoder));
-
-    state.read((char*)&ACC.u, sizeof(uint32_t) * 4);
-    state.read((char*)&R.u, sizeof(R.u));
-    state.read((char*)&I.u, sizeof(I.u));
-    state.read((char*)&Q.u, sizeof(Q.u));
-    state.read((char*)&P.u, sizeof(P.u));
-    state.read((char*)&CMSAR0, sizeof(CMSAR0));
+    state.Do(&ACC);
+    state.Do(&R);
+    state.Do(&I);
+    state.Do(&Q);
+    state.Do(&P);
+    state.Do(&CMSAR0);
 
     //Pipelines
-    state.read((char*)&new_MAC_flags, sizeof(new_MAC_flags));
-    state.read((char*)&MAC_pipeline, sizeof(MAC_pipeline));
-    state.read((char*)&cycle_count, sizeof(cycle_count));
-    state.read((char*)&finish_DIV_event, sizeof(finish_DIV_event));
-    state.read((char*)&new_Q_instance.u, sizeof(new_Q_instance.u));
-    state.read((char*)&DIV_event_started, sizeof(DIV_event_started));
-    state.read((char*)&finish_EFU_event, sizeof(finish_EFU_event));
-    state.read((char*)&new_P_instance.u, sizeof(new_P_instance.u));
-    state.read((char*)&EFU_event_started, sizeof(EFU_event_started));
+    state.Do(&new_MAC_flags);
+    state.Do(&MAC_pipeline); // TODO: test
+    state.Do(&cycle_count);
+    state.Do(&finish_DIV_event);
+    state.Do(&new_Q_instance); // TODO: union
+    state.Do(&DIV_event_started);
+    state.Do(&finish_EFU_event);
+    state.Do(&new_P_instance); // TODO union
+    state.Do(&EFU_event_started);
 
-    state.read((char*)&int_branch_delay, sizeof(int_branch_delay));
-    state.read((char*)&int_backup_reg, sizeof(int_backup_reg));
-    state.read((char*)&int_backup_id, sizeof(int_backup_id));
+    state.Do(&int_branch_delay);
+    state.Do(&int_backup_reg);
+    state.Do(&int_backup_id);
 
-    state.read((char*)&status, sizeof(status));
-    state.read((char*)&status_value, sizeof(status_value));
-    state.read((char*)&status_pipe, sizeof(status_pipe));
-    state.read((char*)&int_branch_pipeline, sizeof(int_branch_pipeline));
-    state.read((char*)&ILW_pipeline, sizeof(ILW_pipeline));
+    state.Do(&status);
+    state.Do(&status_value);
+    state.Do(&status_pipe);
+    state.Do(&int_branch_pipeline); // TODO complicated struct
+    state.Do(&ILW_pipeline); // TODO array
 
-    state.read((char*)&pipeline_state, sizeof(pipeline_state));
+    state.Do(&pipeline_state); // TODO array
 
     //XGKICK
-    state.read((char*)&GIF_addr, sizeof(GIF_addr));
-    state.read((char*)&transferring_GIF, sizeof(transferring_GIF));
-    state.read((char*)&XGKICK_stall, sizeof(XGKICK_stall));
-    state.read((char*)&stalled_GIF_addr, sizeof(stalled_GIF_addr));
+    state.Do(&GIF_addr);
+    state.Do(&transferring_GIF);
+    state.Do(&XGKICK_stall);
+    state.Do(&stalled_GIF_addr);
 
     //Memory
     if (id == 0)
     {
-        state.read((char*)&instr_mem, 1024 * 4);
-        state.read((char*)&data_mem, 1024 * 4);
+        state.DoBytes(&instr_mem, 1024 * 4);
+        state.DoBytes(&data_mem, 1024 * 4);
     }
     else
     {
-        state.read((char*)&instr_mem, 1024 * 16);
-        state.read((char*)&data_mem, 1024 * 16);
+        state.DoBytes(&instr_mem, 1024 * 16);
+        state.DoBytes(&data_mem, 1024 * 16);
     }
 
-    state.read((char*)&running, sizeof(running));
-    state.read((char*)&PC, sizeof(PC));
-    state.read((char*)&new_PC, sizeof(new_PC));
-    state.read((char*)&secondbranch_PC, sizeof(secondbranch_PC));
-    state.read((char*)&second_branch_pending, sizeof(second_branch_pending));
-    state.read((char*)&branch_on, sizeof(branch_on));
-    state.read((char*)&branch_on_delay, sizeof(branch_on_delay));
-    state.read((char*)&finish_on, sizeof(finish_on));
-    state.read((char*)&branch_delay_slot, sizeof(branch_delay_slot));
-    state.read((char*)&ebit_delay_slot, sizeof(ebit_delay_slot));
+    state.Do(&running);
+    state.Do(&PC);
+    state.Do(&new_PC);
+    state.Do(&secondbranch_PC);
+    state.Do(&second_branch_pending);
+    state.Do(&branch_on);
+    state.Do(&branch_on_delay);
+    state.Do(&finish_on);
+    state.Do(&branch_delay_slot);
+    state.Do(&ebit_delay_slot);
 }
 
-void VectorUnit::save_state(ofstream &state)
+void INTC::do_state(StateSerializer &state)
 {
-    for (int i = 0; i < 32; i++)
-        state.write((char*)&gpr[i].u, sizeof(uint32_t) * 4);
-    state.write((char*)&int_gpr, sizeof(int_gpr));
-    state.write((char*)&decoder, sizeof(decoder));
-
-    state.write((char*)&ACC.u, sizeof(uint32_t) * 4);
-    state.write((char*)&R.u, sizeof(R.u));
-    state.write((char*)&I.u, sizeof(I.u));
-    state.write((char*)&Q.u, sizeof(Q.u));
-    state.write((char*)&P.u, sizeof(P.u));
-    state.write((char*)&CMSAR0, sizeof(CMSAR0));
-
-    //Pipelines
-    state.write((char*)&new_MAC_flags, sizeof(new_MAC_flags));
-    state.write((char*)&MAC_pipeline, sizeof(MAC_pipeline));
-    state.write((char*)&cycle_count, sizeof(cycle_count));
-    state.write((char*)&finish_DIV_event, sizeof(finish_DIV_event));
-    state.write((char*)&new_Q_instance.u, sizeof(new_Q_instance.u));
-    state.write((char*)&DIV_event_started, sizeof(DIV_event_started));
-    state.write((char*)&finish_EFU_event, sizeof(finish_EFU_event));
-    state.write((char*)&new_P_instance.u, sizeof(new_P_instance.u));
-    state.write((char*)&EFU_event_started, sizeof(EFU_event_started));
-
-    state.write((char*)&int_branch_delay, sizeof(int_branch_delay));
-    state.write((char*)&int_backup_reg, sizeof(int_backup_reg));
-    state.write((char*)&int_backup_id, sizeof(int_backup_id));
-    state.write((char*)&status, sizeof(status));
-    state.write((char*)&status_value, sizeof(status_value));
-    state.write((char*)&status_pipe, sizeof(status_pipe));
-    state.write((char*)&int_branch_pipeline, sizeof(int_branch_pipeline));
-    state.write((char*)&ILW_pipeline, sizeof(ILW_pipeline));
-
-    state.write((char*)&pipeline_state, sizeof(pipeline_state));
-
-    //XGKICK
-    state.write((char*)&GIF_addr, sizeof(GIF_addr));
-    state.write((char*)&transferring_GIF, sizeof(transferring_GIF));
-    state.write((char*)&XGKICK_stall, sizeof(XGKICK_stall));
-    state.write((char*)&stalled_GIF_addr, sizeof(stalled_GIF_addr));
-
-    //Memory
-    if (id == 0)
-    {
-        state.write((char*)&instr_mem, 1024 * 4);
-        state.write((char*)&data_mem, 1024 * 4);
-    }
-    else
-    {
-        state.write((char*)&instr_mem, 1024 * 16);
-        state.write((char*)&data_mem, 1024 * 16);
-    }
-
-    state.write((char*)&running, sizeof(running));
-    state.write((char*)&PC, sizeof(PC));
-    state.write((char*)&new_PC, sizeof(new_PC));
-    state.write((char*)&secondbranch_PC, sizeof(secondbranch_PC));
-    state.write((char*)&second_branch_pending, sizeof(second_branch_pending));
-    state.write((char*)&branch_on, sizeof(branch_on));
-    state.write((char*)&branch_on_delay, sizeof(branch_on_delay));
-    state.write((char*)&finish_on, sizeof(finish_on));
-    state.write((char*)&branch_delay_slot, sizeof(branch_delay_slot));
-    state.write((char*)&ebit_delay_slot, sizeof(ebit_delay_slot));
+    state.Do(&INTC_MASK);
+    state.Do(&INTC_STAT);
+    state.Do(&stat_speedhack_active);
+    state.Do(&read_stat_count);
 }
 
-void INTC::load_state(ifstream &state)
+void IOP_INTC::do_state(StateSerializer &state)
 {
-    state.read((char*)&INTC_MASK, sizeof(INTC_MASK));
-    state.read((char*)&INTC_STAT, sizeof(INTC_STAT));
-    state.read((char*)&stat_speedhack_active, sizeof(stat_speedhack_active));
-    state.read((char*)&read_stat_count, sizeof(read_stat_count));
+    state.Do(&I_CTRL);
+    state.Do(&I_STAT);
+    state.Do(&I_MASK);
 }
 
-void INTC::save_state(ofstream &state)
+void EmotionTiming::do_state(StateSerializer &state)
 {
-    state.write((char*)&INTC_MASK, sizeof(INTC_MASK));
-    state.write((char*)&INTC_STAT, sizeof(INTC_STAT));
-    state.write((char*)&stat_speedhack_active, sizeof(stat_speedhack_active));
-    state.write((char*)&read_stat_count, sizeof(read_stat_count));
+    state.Do(&timers);
+    state.Do(&events);
 }
 
-void IOP_INTC::load_state(ifstream &state)
+void IOPTiming::do_state(StateSerializer &state)
 {
-    state.read((char*)&I_CTRL, sizeof(I_CTRL));
-    state.read((char*)&I_STAT, sizeof(I_STAT));
-    state.read((char*)&I_MASK, sizeof(I_MASK));
-}
-
-void IOP_INTC::save_state(ofstream &state)
-{
-    state.write((char*)&I_CTRL, sizeof(I_CTRL));
-    state.write((char*)&I_STAT, sizeof(I_STAT));
-    state.write((char*)&I_MASK, sizeof(I_MASK));
-}
-
-void EmotionTiming::load_state(ifstream &state)
-{
-    state.read((char*)&timers, sizeof(timers));
-    state.read((char*)&events, sizeof(events));
-}
-
-void EmotionTiming::save_state(ofstream &state)
-{
-    state.write((char*)&timers, sizeof(timers));
-    state.write((char*)&events, sizeof(events));
-}
-
-void IOPTiming::load_state(ifstream &state)
-{
-    state.read((char*)&timers, sizeof(timers));
-}
-
-void IOPTiming::save_state(ofstream &state)
-{
-    state.write((char*)&timers, sizeof(timers));
+    state.DoArray(&timers, 6);
 }
 
 void DMAC::load_state(ifstream &state)

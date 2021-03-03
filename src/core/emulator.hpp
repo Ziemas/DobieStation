@@ -145,7 +145,7 @@ class Emulator
         void request_gsdump_single_frame();
         void load_state(const char* file_name);
         void save_state(const char* file_name);
-        void do_state(StateSerializer ss);
+        void do_state(StateSerializer &state);
 
         bool interlock_cop2_check(bool isCOP2);
         void clear_cop2_interlock();
