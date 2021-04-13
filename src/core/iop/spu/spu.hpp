@@ -6,6 +6,7 @@
 #include "../../audio/utils.hpp"
 #include "spu_adpcm.hpp"
 #include "spu_utils.hpp"
+#include "../../serialize.hpp"
 
 struct VoiceMix
 {
@@ -292,8 +293,7 @@ class SPU
 
         void gaussianConstructTable();
 
-        void load_state(std::ifstream& state);
-        void save_state(std::ofstream& state);
+        void do_state(StateSerializer& state);
 
 };
 

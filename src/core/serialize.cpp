@@ -1,7 +1,7 @@
-#include <fstream>
-#include <cstring>
 #include "serialize.hpp"
 #include "emulator.hpp"
+#include <cstring>
+#include <fstream>
 
 #define VER_MAJOR 0
 #define VER_MINOR 0
@@ -9,7 +9,7 @@
 
 using namespace std;
 
-bool Emulator::request_load_state(const char *file_name)
+bool Emulator::request_load_state(const char* file_name)
 {
     ifstream state(file_name, ios::binary);
     if (!state.is_open())
@@ -20,7 +20,7 @@ bool Emulator::request_load_state(const char *file_name)
     return true;
 }
 
-bool Emulator::request_save_state(const char *file_name)
+bool Emulator::request_save_state(const char* file_name)
 {
     ofstream state(file_name, ios::binary);
     if (!state.is_open())
@@ -31,7 +31,7 @@ bool Emulator::request_save_state(const char *file_name)
     return true;
 }
 
-void Emulator::load_state(const char *file_name)
+void Emulator::load_state(const char* file_name)
 {
     load_requested = false;
     printf("[Emulator] Loading state...\n");
@@ -73,7 +73,7 @@ void Emulator::load_state(const char *file_name)
     printf("[Emulator] Success!\n");
 }
 
-void Emulator::save_state(const char *file_name)
+void Emulator::save_state(const char* file_name)
 {
     save_requested = false;
 
@@ -104,7 +104,7 @@ void Emulator::save_state(const char *file_name)
     printf("Success!\n");
 }
 
-void Emulator::do_state(StateSerializer &state)
+void Emulator::do_state(StateSerializer& state)
 {
     //Emulator info
     state.Do(&VBLANK_sent);
@@ -157,8 +157,7 @@ void Emulator::do_state(StateSerializer &state)
     //spu2.load_state(ss);
 }
 
-
-void EmotionEngine::do_state(StateSerializer &state)
+void EmotionEngine::do_state(StateSerializer& state)
 {
     state.Do(&cycle_count);
     state.Do(&cycles_to_run);
@@ -181,7 +180,7 @@ void EmotionEngine::do_state(StateSerializer &state)
     state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
 }
 
-void Cop0::do_state(StateSerializer &state)
+void Cop0::do_state(StateSerializer& state)
 {
     state.DoArray(&gpr, 32);
     state.Do(&status);
@@ -201,7 +200,7 @@ void Cop0::do_state(StateSerializer &state)
     }
 }
 
-void Cop1::do_state(StateSerializer &state)
+void Cop1::do_state(StateSerializer& state)
 {
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t));
@@ -210,7 +209,7 @@ void Cop1::do_state(StateSerializer &state)
     state.Do(&control);
 }
 
-void IOP::do_state(StateSerializer &state)
+void IOP::do_state(StateSerializer& state)
 {
     state.DoArray(&gpr, 32);
     state.Do(&LO);
@@ -229,7 +228,7 @@ void IOP::do_state(StateSerializer &state)
     state.Do(&cop0.EPC);
 }
 
-void VectorUnit::do_state(StateSerializer &state)
+void VectorUnit::do_state(StateSerializer& state)
 {
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
@@ -263,7 +262,7 @@ void VectorUnit::do_state(StateSerializer &state)
     state.Do(&status_value);
     state.Do(&status_pipe);
     state.Do(&int_branch_pipeline); // TODO complicated struct
-    state.Do(&ILW_pipeline); // TODO array
+    state.Do(&ILW_pipeline);        // TODO array
 
     state.Do(&pipeline_state); // TODO array
 
@@ -297,7 +296,7 @@ void VectorUnit::do_state(StateSerializer &state)
     state.Do(&ebit_delay_slot);
 }
 
-void INTC::do_state(StateSerializer &state)
+void INTC::do_state(StateSerializer& state)
 {
     state.Do(&INTC_MASK);
     state.Do(&INTC_STAT);
@@ -305,95 +304,92 @@ void INTC::do_state(StateSerializer &state)
     state.Do(&read_stat_count);
 }
 
-void IOP_INTC::do_state(StateSerializer &state)
+void IOP_INTC::do_state(StateSerializer& state)
 {
     state.Do(&I_CTRL);
     state.Do(&I_STAT);
     state.Do(&I_MASK);
 }
 
-void EmotionTiming::do_state(StateSerializer &state)
+void EmotionTiming::do_state(StateSerializer& state)
 {
     state.Do(&timers);
     state.Do(&events);
 }
 
-void IOPTiming::do_state(StateSerializer &state)
+void IOPTiming::do_state(StateSerializer& state)
 {
     state.DoArray(&timers, 6);
 }
 
-void DMAC::load_state(ifstream &state)
+void DMAC::load_state(StateSerializer& state)
 {
-    state.read((char*)&channels, sizeof(channels));
+    state.Do(&channels); // TODO array
 
-    apply_dma_funcs();
+    if (state.GetMode() == StateSerializer::Mode::Read)
+        apply_dma_funcs();
 
-    state.read((char*)&control, sizeof(control));
-    state.read((char*)&interrupt_stat, sizeof(interrupt_stat));
-    state.read((char*)&PCR, sizeof(PCR));
-    state.read((char*)&RBOR, sizeof(RBOR));
-    state.read((char*)&RBSR, sizeof(RBSR));
-    state.read((char*)&SQWC, sizeof(SQWC));
-    state.read((char*)&STADR, sizeof(STADR));
-    state.read((char*)&mfifo_empty_triggered, sizeof(mfifo_empty_triggered));
-    state.read((char*)&cycles_to_run, sizeof(cycles_to_run));
-    state.read((char*)&master_disable, sizeof(master_disable));
+    state.Do(&control);
+    state.Do(&interrupt_stat);
+    state.Do(&PCR);
+    state.Do(&RBOR);
+    state.Do(&RBSR);
+    state.Do(&SQWC);
+    state.Do(&STADR);
+    state.Do(&mfifo_empty_triggered);
+    state.Do(&cycles_to_run);
+    state.Do(&master_disable);
 
-    int index;
-    state.read((char*)&index, sizeof(index));
-    if (index >= 0)
-        active_channel = &channels[index];
-    else
-        active_channel = nullptr;
-
-    int queued_size;
-    state.read((char*)&queued_size, sizeof(queued_size));
-    if (queued_size > 0)
+    if (state.GetMode() == StateSerializer::Mode::Read)
     {
-        for (int i = 0; i < queued_size; i++)
+        // TODO Blergh
+        int index;
+        state.Do(&index);
+        if (index >= 0)
+            active_channel = &channels[index];
+        else
+            active_channel = nullptr;
+    }
+    else
+    {
+        int index;
+        if (active_channel)
+            index = active_channel->index;
+        else
+            index = -1;
+
+        state.Do(&index);
+    }
+
+    if (state.GetMode() == StateSerializer::Mode::Read)
+    {
+        int queued_size;
+        state.read((char*)&queued_size, sizeof(queued_size));
+        if (queued_size > 0)
         {
-            state.read((char*)&index, sizeof(index));
-            queued_channels.push_back(&channels[index]);
+            for (int i = 0; i < queued_size; i++)
+            {
+                state.read((char*)&index, sizeof(index));
+                queued_channels.push_back(&channels[index]);
+            }
+        }
+    }
+    else
+    {
+        int size = queued_channels.size();
+        state.write((char*)&size, sizeof(size));
+        if (size > 0)
+        {
+            for (auto it = queued_channels.begin(); it != queued_channels.end(); it++)
+            {
+                index = (*it)->index;
+                state.write((char*)&index, sizeof(index));
+            }
         }
     }
 }
 
-void DMAC::save_state(ofstream &state)
-{
-    state.write((char*)&channels, sizeof(channels));
-
-    state.write((char*)&control, sizeof(control));
-    state.write((char*)&interrupt_stat, sizeof(interrupt_stat));
-    state.write((char*)&PCR, sizeof(PCR));
-    state.write((char*)&RBOR, sizeof(RBOR));
-    state.write((char*)&RBSR, sizeof(RBSR));
-    state.write((char*)&SQWC, sizeof(SQWC));
-    state.write((char*)&STADR, sizeof(STADR));
-    state.write((char*)&mfifo_empty_triggered, sizeof(mfifo_empty_triggered));
-    state.write((char*)&cycles_to_run, sizeof(cycles_to_run));
-    state.write((char*)&master_disable, sizeof(master_disable));
-
-    int index;
-    if (active_channel)
-        index = active_channel->index;
-    else
-        index = -1;
-
-    state.write((char*)&index, sizeof(index));
-    int size = queued_channels.size();
-    state.write((char*)&size, sizeof(size));
-    if (size > 0)
-    {
-        for (auto it = queued_channels.begin(); it != queued_channels.end(); it++ )
-        {
-            index = (*it)->index;
-            state.write((char*)&index, sizeof(index));
-        }
-    }
-}
-
-void IOP_DMA::load_state(ifstream &state)
+void IOP_DMA::load_state(ifstream& state)
 {
     state.read((char*)&channels, sizeof(channels));
 
@@ -421,7 +417,7 @@ void IOP_DMA::load_state(ifstream &state)
     apply_dma_functions();
 }
 
-void IOP_DMA::save_state(ofstream &state)
+void IOP_DMA::save_state(ofstream& state)
 {
     state.write((char*)&channels, sizeof(channels));
 
@@ -442,7 +438,7 @@ void IOP_DMA::save_state(ofstream &state)
     state.write((char*)&DICR, sizeof(DICR));
 }
 
-void GraphicsInterface::load_state(ifstream &state)
+void GraphicsInterface::load_state(ifstream& state)
 {
     int size;
     uint128_t FIFO_buffer[16];
@@ -463,7 +459,7 @@ void GraphicsInterface::load_state(ifstream &state)
     state.read((char*)&gif_temporary_stop, sizeof(gif_temporary_stop));
 }
 
-void GraphicsInterface::save_state(ofstream &state)
+void GraphicsInterface::save_state(ofstream& state)
 {
     int size = FIFO.size();
     uint128_t FIFO_buffer[16];
@@ -489,7 +485,7 @@ void GraphicsInterface::save_state(ofstream &state)
     state.write((char*)&gif_temporary_stop, sizeof(gif_temporary_stop));
 }
 
-void SubsystemInterface::load_state(ifstream &state)
+void SubsystemInterface::load_state(ifstream& state)
 {
     state.read((char*)&mscom, sizeof(mscom));
     state.read((char*)&smcom, sizeof(smcom));
@@ -513,7 +509,7 @@ void SubsystemInterface::load_state(ifstream &state)
         SIF1_FIFO.push(buffer[i]);
 }
 
-void SubsystemInterface::save_state(ofstream &state)
+void SubsystemInterface::save_state(ofstream& state)
 {
     state.write((char*)&mscom, sizeof(mscom));
     state.write((char*)&smcom, sizeof(smcom));
@@ -545,7 +541,7 @@ void SubsystemInterface::save_state(ofstream &state)
         SIF1_FIFO.push(buffer[i]);
 }
 
-void VectorInterface::load_state(ifstream &state)
+void VectorInterface::load_state(ifstream& state)
 {
     int size, internal_size;
     uint32_t FIFO_buffer[64];
@@ -597,7 +593,7 @@ void VectorInterface::load_state(ifstream &state)
     state.read((char*)&VIF_ERR, sizeof(VIF_ERR));
 }
 
-void VectorInterface::save_state(ofstream &state)
+void VectorInterface::save_state(ofstream& state)
 {
     int size = FIFO.size();
     int internal_size = internal_FIFO.size();
@@ -660,7 +656,7 @@ void VectorInterface::save_state(ofstream &state)
     state.write((char*)&VIF_ERR, sizeof(VIF_ERR));
 }
 
-void CDVD_Drive::load_state(ifstream &state)
+void CDVD_Drive::load_state(ifstream& state)
 {
     state.read((char*)&file_size, sizeof(file_size));
     state.read((char*)&read_bytes_left, sizeof(read_bytes_left));
@@ -690,7 +686,7 @@ void CDVD_Drive::load_state(ifstream &state)
     state.read((char*)&rtc, sizeof(rtc));
 }
 
-void CDVD_Drive::save_state(ofstream &state)
+void CDVD_Drive::save_state(ofstream& state)
 {
     state.write((char*)&file_size, sizeof(file_size));
     state.write((char*)&read_bytes_left, sizeof(read_bytes_left));
@@ -720,7 +716,7 @@ void CDVD_Drive::save_state(ofstream &state)
     state.write((char*)&rtc, sizeof(rtc));
 }
 
-void Scheduler::load_state(ifstream &state)
+void Scheduler::load_state(ifstream& state)
 {
     state.read((char*)&ee_cycles, sizeof(ee_cycles));
     state.read((char*)&bus_cycles, sizeof(bus_cycles));
@@ -757,7 +753,7 @@ void Scheduler::load_state(ifstream &state)
     }
 }
 
-void Scheduler::save_state(ofstream &state)
+void Scheduler::save_state(ofstream& state)
 {
     state.write((char*)&ee_cycles, sizeof(ee_cycles));
     state.write((char*)&bus_cycles, sizeof(bus_cycles));
@@ -783,106 +779,51 @@ void Scheduler::save_state(ofstream &state)
         state.write((char*)&timers[i], sizeof(SchedulerTimer));
 }
 
-void Gamepad::load_state(ifstream &state)
+void Gamepad::do_state(StateSerializer& state)
 {
-    state.read((char*)&command_buffer, sizeof(command_buffer));
-    state.read((char*)&rumble_values, sizeof(rumble_values));
-    state.read((char*)&mode_lock, sizeof(mode_lock));
-    state.read((char*)&command, sizeof(command));
-    state.read((char*)&command_length, sizeof(command_length));
-    state.read((char*)&data_count, sizeof(data_count));
-    state.read((char*)&pad_mode, sizeof(pad_mode));
-    state.read((char*)&config_mode, sizeof(config_mode));
+    state.Do(&command_buffer);
+    state.Do(&rumble_values);
+    state.Do(&mode_lock);
+    state.Do(&command);
+    state.Do(&command_length);
+    state.Do(&data_count);
+    state.Do(&pad_mode);
+    state.Do(&config_mode);
 }
 
-void Gamepad::save_state(ofstream &state)
+void SPU::do_state(StateSerializer& state)
 {
-    state.write((char*)&command_buffer, sizeof(command_buffer));
-    state.write((char*)&rumble_values, sizeof(rumble_values));
-    state.write((char*)&mode_lock, sizeof(mode_lock));
-    state.write((char*)&command, sizeof(command));
-    state.write((char*)&command_length, sizeof(command_length));
-    state.write((char*)&data_count, sizeof(data_count));
-    state.write((char*)&pad_mode, sizeof(pad_mode));
-    state.write((char*)&config_mode, sizeof(config_mode));
-}
-
-void SPU::load_state(ifstream &state)
-{
-    state.read((char*)&voices, sizeof(voices));
-    state.read((char*)&core_att, sizeof(core_att));
-    state.read((char*)&status, sizeof(status));
-    state.read((char*)&spdif_irq, sizeof(spdif_irq));
-    state.read((char*)&transfer_addr, sizeof(transfer_addr));
-    state.read((char*)&current_addr, sizeof(current_addr));
-    state.read((char*)&autodma_ctrl, sizeof(autodma_ctrl));
-    state.read((char*)&buffer_pos, sizeof(buffer_pos));
-    state.read((char*)&IRQA, sizeof(IRQA));
-    state.read((char*)&ENDX, sizeof(ENDX));
-    state.read((char*)&key_off, sizeof(key_off));
-    state.read((char*)&key_on, sizeof(key_on));
-    state.read((char*)&noise, sizeof(noise));
-    state.read((char*)&output_enable, sizeof(output_enable));
-
-    state.read((char*)&reverb, sizeof(reverb));
-    state.read((char*)&effect_enable, sizeof(effect_enable));
-    state.read((char*)&effect_volume_l, sizeof(effect_volume_l));
-    state.read((char*)&effect_volume_r, sizeof(effect_volume_r));
-
-    state.read((char*)&current_buffer, sizeof(current_buffer));
-    state.read((char*)&ADMA_progress, sizeof(ADMA_progress));
-    state.read((char*)&data_input_volume_l, sizeof(data_input_volume_l));
-    state.read((char*)&data_input_volume_r, sizeof(data_input_volume_r));
-    state.read((char*)&core_volume_l, sizeof(core_volume_l));
-    state.read((char*)&core_volume_r, sizeof(core_volume_r));
-    state.read((char*)&MVOLL, sizeof(MVOLL));
-    state.read((char*)&MVOLR, sizeof(MVOLR));
-
-    state.read((char*)&mix_state, sizeof(mix_state));
-    state.read((char*)&voice_mixdry_left, sizeof(voice_mixdry_left));
-    state.read((char*)&voice_mixdry_right, sizeof(voice_mixdry_right));
-    state.read((char*)&voice_mixwet_left, sizeof(voice_mixwet_left));
-    state.read((char*)&voice_mixwet_right, sizeof(voice_mixwet_right));
-    state.read((char*)&voice_pitch_mod, sizeof(voice_pitch_mod));
-    state.read((char*)&voice_noise_gen, sizeof(voice_noise_gen));
-}
-
-void SPU::save_state(ofstream &state)
-{
-    state.write((char*)&voices, sizeof(voices));
-    state.write((char*)&core_att, sizeof(core_att));
-    state.write((char*)&status, sizeof(status));
-    state.write((char*)&spdif_irq, sizeof(spdif_irq));
-    state.write((char*)&transfer_addr, sizeof(transfer_addr));
-    state.write((char*)&current_addr, sizeof(current_addr));
-    state.write((char*)&autodma_ctrl, sizeof(autodma_ctrl));
-    state.write((char*)&buffer_pos, sizeof(buffer_pos));
-    state.write((char*)&IRQA, sizeof(IRQA));
-    state.write((char*)&ENDX, sizeof(ENDX));
-    state.write((char*)&key_off, sizeof(key_off));
-    state.write((char*)&key_on, sizeof(key_on));
-    state.write((char*)&noise, sizeof(noise));
-    state.write((char*)&output_enable, sizeof(output_enable));
-
-    state.write((char*)&reverb, sizeof(reverb));
-    state.write((char*)&effect_enable, sizeof(effect_enable));
-    state.write((char*)&effect_volume_l, sizeof(effect_volume_l));
-    state.write((char*)&effect_volume_r, sizeof(effect_volume_r));
-
-    state.write((char*)&current_buffer, sizeof(current_buffer));
-    state.write((char*)&ADMA_progress, sizeof(ADMA_progress));
-    state.write((char*)&data_input_volume_l, sizeof(data_input_volume_l));
-    state.write((char*)&data_input_volume_r, sizeof(data_input_volume_r));
-    state.write((char*)&core_volume_l, sizeof(core_volume_l));
-    state.write((char*)&core_volume_r, sizeof(core_volume_r));
-    state.write((char*)&MVOLL, sizeof(MVOLL));
-    state.write((char*)&MVOLR, sizeof(MVOLR));
-
-    state.write((char*)&mix_state, sizeof(mix_state));
-    state.write((char*)&voice_mixdry_left, sizeof(voice_mixdry_left));
-    state.write((char*)&voice_mixdry_right, sizeof(voice_mixdry_right));
-    state.write((char*)&voice_mixwet_left, sizeof(voice_mixwet_left));
-    state.write((char*)&voice_mixwet_right, sizeof(voice_mixwet_right));
-    state.write((char*)&voice_pitch_mod, sizeof(voice_pitch_mod));
-    state.write((char*)&voice_noise_gen, sizeof(voice_noise_gen));
+    state.Do(&voices);
+    state.Do(&core_att);
+    state.Do(&status);
+    state.Do(&spdif_irq);
+    state.Do(&transfer_addr);
+    state.Do(&current_addr);
+    state.Do(&autodma_ctrl);
+    state.Do(&buffer_pos);
+    state.Do(&IRQA);
+    state.Do(&ENDX);
+    state.Do(&key_off);
+    state.Do(&key_on);
+    state.Do(&noise);
+    state.Do(&output_enable);
+    state.Do(&reverb);
+    state.Do(&effect_enable);
+    state.Do(&effect_volume_l);
+    state.Do(&effect_volume_r);
+    state.Do(&current_buffer);
+    state.Do(&ADMA_progress);
+    state.Do(&data_input_volume_l);
+    state.Do(&data_input_volume_r);
+    state.Do(&core_volume_l);
+    state.Do(&core_volume_r);
+    state.Do(&MVOLL);
+    state.Do(&MVOLR);
+    state.Do(&mix_state);
+    state.Do(&voice_mixdry_left);
+    state.Do(&voice_mixdry_right);
+    state.Do(&voice_mixwet_left);
+    state.Do(&voice_mixwet_right);
+    state.Do(&voice_pitch_mod);
+    state.Do(&voice_noise_gen);
 }
