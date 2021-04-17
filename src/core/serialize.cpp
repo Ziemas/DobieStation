@@ -161,8 +161,8 @@ void EmotionEngine::do_state(StateSerializer& state)
 {
     state.Do(&cycle_count);
     state.Do(&cycles_to_run);
-    state.Do(&icache);
-    state.Do(&gpr);
+    state.DoArray(icache, 128);
+    state.DoArray(gpr, 512);
     state.Do(&LO);
     state.Do(&HI);
     state.Do(&LO.hi);
@@ -171,7 +171,6 @@ void EmotionEngine::do_state(StateSerializer& state)
     state.Do(&new_PC);
     state.Do(&SA);
 
-    //state.read((char*)&IRQ_raised, sizeof(IRQ_raised));
     state.Do(&wait_for_IRQ);
     state.Do(&branch_on);
     state.Do(&delay_slot);
@@ -234,7 +233,7 @@ void VectorUnit::do_state(StateSerializer& state)
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
     state.DoArray(gpr, 32);
-    state.DoArray(int_gpr, 32);
+    state.DoArray(int_gpr, 16);
     state.Do(&decoder);
 
     state.Do(&ACC);
@@ -246,7 +245,7 @@ void VectorUnit::do_state(StateSerializer& state)
 
     //Pipelines
     state.Do(&new_MAC_flags);
-    state.Do(&MAC_pipeline); // TODO: test
+    state.DoArray(MAC_pipeline, 4); // TODO: test
     state.Do(&cycle_count);
     state.Do(&finish_DIV_event);
     state.Do(&new_Q_instance); // TODO: union
@@ -263,9 +262,9 @@ void VectorUnit::do_state(StateSerializer& state)
     state.Do(&status_value);
     state.Do(&status_pipe);
     state.Do(&int_branch_pipeline); // TODO complicated struct
-    state.Do(&ILW_pipeline);        // TODO array
+    state.DoArray(ILW_pipeline, 4);        // TODO array
 
-    state.Do(&pipeline_state); // TODO array
+    state.DoArray(pipeline_state, 2); // TODO array
 
     //XGKICK
     state.Do(&GIF_addr);
@@ -314,8 +313,8 @@ void IOP_INTC::do_state(StateSerializer& state)
 
 void EmotionTiming::do_state(StateSerializer& state)
 {
-    state.Do(&timers);
-    state.Do(&events);
+    state.DoArray(timers, 4);
+    state.DoArray(events, 4);
 }
 
 void IOPTiming::do_state(StateSerializer& state)
@@ -325,7 +324,7 @@ void IOPTiming::do_state(StateSerializer& state)
 
 void DMAC::do_state(StateSerializer& state)
 {
-    state.Do(&channels); // TODO array
+    state.DoArray(channels, 15); // TODO array
 
     if (state.GetMode() == StateSerializer::Mode::Read)
         apply_dma_funcs();
@@ -518,7 +517,7 @@ void VectorInterface::do_state(StateSerializer& state)
     state.Do(&flush_stall);
     state.Do(&wait_cmd_value);
     state.Do(&buffer_size);
-    state.Do(&buffer);
+    state.DoArray(buffer, 4);
 
     state.Do(&DBF);
     state.Do(&CYCLE);
@@ -530,8 +529,8 @@ void VectorInterface::do_state(StateSerializer& state)
     state.Do(&ITOPS);
     state.Do(&MODE);
     state.Do(&MASK);
-    state.Do(&ROW);
-    state.Do(&COL);
+    state.DoArray(ROW, 4);
+    state.DoArray(COL, 4);
     state.Do(&CODE);
     state.Do(&command_len);
 
@@ -622,20 +621,20 @@ void CDVD_Drive::do_state(StateSerializer& state)
     state.Do(&sector_pos);
     state.Do(&sectors_left);
     state.Do(&block_size);
-    state.Do(&read_buffer);
+    state.DoBytes(read_buffer, 4096);
     state.Do(&ISTAT);
     state.Do(&drive_status);
     state.Do(&is_spinning);
 
     state.Do(&active_N_command);
     state.Do(&N_command);
-    state.Do(&N_command_params);
+    state.DoArray(N_command_params, 11);
     state.Do(&N_params);
     state.Do(&N_status);
 
     state.Do(&S_command);
-    state.Do(&S_command_params);
-    state.Do(&S_outdata);
+    state.DoArray(S_command_params, 16);
+    state.DoArray(S_outdata, 16);
     state.Do(&S_params);
     state.Do(&S_out_params);
     state.Do(&S_status);
@@ -713,8 +712,8 @@ void Scheduler::save_state(ofstream& state)
 
 void Gamepad::do_state(StateSerializer& state)
 {
-    state.Do(&command_buffer);
-    state.Do(&rumble_values);
+    state.DoArray(command_buffer, 25);
+    state.DoArray(rumble_values, 8);
     state.Do(&mode_lock);
     state.Do(&command);
     state.Do(&command_length);
@@ -725,15 +724,15 @@ void Gamepad::do_state(StateSerializer& state)
 
 void SPU::do_state(StateSerializer& state)
 {
-    state.Do(&voices);
-    state.Do(&core_att);
+    state.DoArray(voices, 24);
+    state.DoArray(core_att, 2);
     state.Do(&status);
     state.Do(&spdif_irq);
     state.Do(&transfer_addr);
     state.Do(&current_addr);
     state.Do(&autodma_ctrl);
     state.Do(&buffer_pos);
-    state.Do(&IRQA);
+    state.DoArray(IRQA, 2);
     state.Do(&ENDX);
     state.Do(&key_off);
     state.Do(&key_on);
