@@ -178,12 +178,12 @@ void EmotionEngine::do_state(StateSerializer& state)
 
     state.Do(&deci2size);
     //state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
-    state.DoArray(&deci2handlers, 128);
+    state.DoArray(deci2handlers, 128);
 }
 
 void Cop0::do_state(StateSerializer& state)
 {
-    state.DoArray(&gpr, 32);
+    state.DoArray(gpr, 32);
     state.Do(&status);
     state.Do(&cause);
     state.Do(&EPC);
@@ -191,7 +191,7 @@ void Cop0::do_state(StateSerializer& state)
     state.Do(&PCCR);
     state.Do(&PCR0);
     state.Do(&PCR1);
-    state.DoArray(&tlb, 48);
+    state.DoArray(tlb, 48);
 
     if (state.GetMode() == StateSerializer::Mode::Read)
     {
@@ -205,19 +205,19 @@ void Cop1::do_state(StateSerializer& state)
 {
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t));
-    state.DoArray(&gpr, 32);
+    state.DoArray(gpr, 32);
     state.Do(&accumulator);
     state.Do(&control);
 }
 
 void IOP::do_state(StateSerializer& state)
 {
-    state.DoArray(&gpr, 32);
+    state.DoArray(gpr, 32);
     state.Do(&LO);
     state.Do(&HI);
     state.Do(&PC);
     state.Do(&new_PC);
-    state.DoArray(&icache, 256);
+    state.DoArray(icache, 256);
 
     state.Do(&branch_delay);
     state.Do(&will_branch);
@@ -233,8 +233,8 @@ void VectorUnit::do_state(StateSerializer& state)
 {
     //for (int i = 0; i < 32; i++)
     //    state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
-    state.DoArray(&gpr, 32);
-    state.DoArray(&int_gpr, 32);
+    state.DoArray(gpr, 32);
+    state.DoArray(int_gpr, 32);
     state.Do(&decoder);
 
     state.Do(&ACC);
@@ -320,7 +320,7 @@ void EmotionTiming::do_state(StateSerializer& state)
 
 void IOPTiming::do_state(StateSerializer& state)
 {
-    state.DoArray(&timers, 6);
+    state.DoArray(timers, 6);
 }
 
 void DMAC::do_state(StateSerializer& state)

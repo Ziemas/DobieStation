@@ -25,6 +25,8 @@ class StateSerializer
     template <typename T>
     void Do(T* ptr)
     {
+        printf("element %d\n", sizeof(T));
+
         if (m_mode == Mode::Read)
         {
             m_stream.read((char*)ptr, sizeof(T));
@@ -109,7 +111,10 @@ class StateSerializer
     void DoArray(T* ptr, size_t count)
     {
         for (size_t i = 0; i < count; i++)
+        {
+            printf("%d\n", i);
             Do(&ptr[i]);
+        }
     }
 
   private:
