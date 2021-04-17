@@ -1,6 +1,9 @@
 #ifndef __SERIALIZE_H_
 #define __SERIALIZE_H_
 #include <fstream>
+#include <list>
+#include <queue>
+#include <vector>
 
 class StateSerializer
 {
@@ -43,6 +46,60 @@ class StateSerializer
         {
             m_stream.write((char*)ptr, len);
         }
+    }
+
+    template <typename T>
+    void Do(std::queue<T>* data)
+    {
+        uint32_t length = static_cast<uint32_t>(data->size());
+        Do(&length);
+        if (m_mode == Mode::Read)
+        {
+            // Doesn't reset
+            for (uint32_t i = 0; i < length; i++)
+            {
+                T value;
+                Do(&value);
+                data->push(value);
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < length; i++)
+                Do(&data[i]);
+        }
+    }
+
+    template <typename T>
+    void Do(std::list<T>* data)
+    {
+        uint32_t length = static_cast<uint32_t>(data->size());
+        Do(&length);
+        if (m_mode == Mode::Read)
+        {
+            data->clear();
+            for (uint32_t i = 0; i < length; i++)
+            {
+                T value;
+                Do(&value);
+                data->push_back(value);
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < length; i++)
+                Do(&data[i]);
+        }
+    }
+
+    template <typename T>
+    void Do(std::vector<T>* data)
+    {
+        uint32_t length = static_cast<uint32_t>(data->size());
+        Do(&length);
+        if (m_mode == Mode::Read)
+            data->resize(length);
+        DoArray(data->data(), data->size());
     }
 
     template <typename T>

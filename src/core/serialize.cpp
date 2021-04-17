@@ -131,27 +131,27 @@ void Emulator::do_state(StateSerializer& state)
     iop_intc.do_state(state);
 
     ////Timers
-    //timers.load_state(ss);
-    //iop_timers.load_state(ss);
+    timers.do_state(state);
+    iop_timers.do_state(state);
 
     ////DMA
-    //dmac.load_state(ss);
-    //iop_dma.load_state(ss);
+    dmac.do_state(state);
+    iop_dma.do_state(state);
 
     ////"Interfaces"
-    //gif.load_state(ss);
-    //sif.load_state(ss);
-    //vif0.load_state(ss);
-    //vif1.load_state(ss);
+    gif.do_state(state);
+    sif.do_state(state);
+    vif0.do_state(state);
+    vif1.do_state(state);
 
     ////CDVD
     cdvd.do_state(state);
 
     ////GS
     ////Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
-    //gs.load_state(ss);
+    gs.do_state(state);
 
-    //scheduler.load_state(ss);
+    scheduler.do_state(state);
     pad.do_state(state);
     spu.do_state(state);
     spu2.do_state(state);
@@ -323,7 +323,7 @@ void IOPTiming::do_state(StateSerializer& state)
     state.DoArray(&timers, 6);
 }
 
-void DMAC::load_state(StateSerializer& state)
+void DMAC::do_state(StateSerializer& state)
 {
     state.Do(&channels); // TODO array
 
@@ -341,10 +341,11 @@ void DMAC::load_state(StateSerializer& state)
     state.Do(&cycles_to_run);
     state.Do(&master_disable);
 
+    int index = -1;
+
     if (state.GetMode() == StateSerializer::Mode::Read)
     {
         // TODO Blergh
-        int index;
         state.Do(&index);
         if (index >= 0)
             active_channel = &channels[index];
@@ -353,7 +354,6 @@ void DMAC::load_state(StateSerializer& state)
     }
     else
     {
-        int index;
         if (active_channel)
             index = active_channel->index;
         else
@@ -365,12 +365,12 @@ void DMAC::load_state(StateSerializer& state)
     if (state.GetMode() == StateSerializer::Mode::Read)
     {
         int queued_size;
-        state.read((char*)&queued_size, sizeof(queued_size));
+        state.Do(&queued_size);
         if (queued_size > 0)
         {
             for (int i = 0; i < queued_size; i++)
             {
-                state.read((char*)&index, sizeof(index));
+                state.Do(&index);
                 queued_channels.push_back(&channels[index]);
             }
         }
@@ -378,172 +378,122 @@ void DMAC::load_state(StateSerializer& state)
     else
     {
         int size = queued_channels.size();
-        state.write((char*)&size, sizeof(size));
+        state.Do(&size);
         if (size > 0)
         {
             for (auto it = queued_channels.begin(); it != queued_channels.end(); it++)
             {
                 index = (*it)->index;
-                state.write((char*)&index, sizeof(index));
+                state.Do((&index));
             }
         }
     }
 }
 
-void IOP_DMA::load_state(ifstream& state)
+void IOP_DMA::do_state(StateSerializer& state)
 {
-    state.read((char*)&channels, sizeof(channels));
+    state.Do(&channels);
 
-    int active_index;
-    state.read((char*)&active_index, sizeof(active_index));
-    if (active_index)
-        active_channel = &channels[active_index - 1];
-    else
-        active_channel = nullptr;
-
-    int queued_size = 0;
-    state.read((char*)&queued_size, sizeof(queued_size));
-    for (int i = 0; i < queued_size; i++)
+    if (state.GetMode() == StateSerializer::Mode::Read)
     {
-        int index;
-        state.read((char*)&index, sizeof(index));
-        queued_channels.push_back(&channels[index]);
+        int active_index;
+        state.Do(&active_index);
+        if (active_index)
+            active_channel = &channels[active_index - 1];
+        else
+            active_channel = nullptr;
+    }
+    else
+    {
+        int active_index = 0;
+        if (active_channel)
+            active_index = active_channel->index + 1;
+        state.Do(&active_index);
     }
 
-    state.read((char*)&DPCR, sizeof(DPCR));
-    state.read((char*)&DICR, sizeof(DICR));
+    if (state.GetMode() == StateSerializer::Mode::Read)
+    {
+        int queued_size = 0;
+        state.Do(&queued_size);
+        for (int i = 0; i < queued_size; i++)
+        {
+            int index;
+            state.Do(&index);
+            queued_channels.push_back(&channels[index]);
+        }
+    }
+    else
+    {
+        int queued_size = static_cast<int>(queued_channels.size());
+        state.Do(&queued_size);
+        for (auto it = queued_channels.begin(); it != queued_channels.end(); it++)
+        {
+            IOP_DMA_Channel* chan = *it;
+            state.Do(&chan->index);
+        }
+    }
+
+    state.Do(&DPCR);
+    state.Do(&DICR);
 
     //We have to reapply the function pointers as there's no guarantee they will remain in memory
     //the next time Dobie is loaded
     apply_dma_functions();
 }
 
-void IOP_DMA::save_state(ofstream& state)
+void GraphicsInterface::do_state(StateSerializer& state)
 {
-    state.write((char*)&channels, sizeof(channels));
+    //if (state.GetMode() == StateSerializer::Mode::Read)
+    //{
+    //    int size;
+    //    uint128_t FIFO_buffer[16];
+    //    state.Do(&size);
+    //    state.DoBytes(&FIFO_buffer, sizeof(uint128_t) * size);
+    //    for (int i = 0; i < size; i++)
+    //        FIFO.push(FIFO_buffer[i]);
+    //}
+    //else
+    //{
+    //    int size = static_cast<int>(FIFO.size());
+    //    uint128_t FIFO_buffer[16];
+    //    for (int i = 0; i < size; i++)
+    //    {
+    //        FIFO_buffer[i] = FIFO.front();
+    //        FIFO.pop();
+    //    }
+    //    state.Do(&size);
+    //    state.DoBytes(&FIFO_buffer, sizeof(uint128_t) * size);
+    //    for (int i = 0; i < size; i++)
+    //        FIFO.push(FIFO_buffer[i]);
+    //}
+    state.Do(&FIFO);
 
-    int active_index = 0;
-    if (active_channel)
-        active_index = active_channel->index + 1;
-    state.write((char*)&active_index, sizeof(active_index));
-
-    int queued_size = queued_channels.size();
-    state.write((char*)&queued_size, sizeof(queued_size));
-    for (auto it = queued_channels.begin(); it != queued_channels.end(); it++)
-    {
-        IOP_DMA_Channel* chan = *it;
-        state.write((char*)&chan->index, sizeof(chan->index));
-    }
-
-    state.write((char*)&DPCR, sizeof(DPCR));
-    state.write((char*)&DICR, sizeof(DICR));
+    state.Do(&path);
+    state.Do(&active_path);
+    state.Do(&path_queue);
+    state.Do(&path3_vif_masked);
+    state.Do(&internal_Q);
+    state.Do(&path3_dma_running);
+    state.Do(&intermittent_mode);
+    state.Do(&outputting_path);
+    state.Do(&path3_mode_masked);
+    state.Do(&gif_temporary_stop);
 }
 
-void GraphicsInterface::load_state(ifstream& state)
+void SubsystemInterface::do_state(StateSerializer& state)
 {
-    int size;
-    uint128_t FIFO_buffer[16];
-    state.read((char*)&size, sizeof(size));
-    state.read((char*)&FIFO_buffer, sizeof(uint128_t) * size);
-    for (int i = 0; i < size; i++)
-        FIFO.push(FIFO_buffer[i]);
-
-    state.read((char*)&path, sizeof(path));
-    state.read((char*)&active_path, sizeof(active_path));
-    state.read((char*)&path_queue, sizeof(path_queue));
-    state.read((char*)&path3_vif_masked, sizeof(path3_vif_masked));
-    state.read((char*)&internal_Q, sizeof(internal_Q));
-    state.read((char*)&path3_dma_running, sizeof(path3_dma_running));
-    state.read((char*)&intermittent_mode, sizeof(intermittent_mode));
-    state.read((char*)&outputting_path, sizeof(outputting_path));
-    state.read((char*)&path3_mode_masked, sizeof(path3_mode_masked));
-    state.read((char*)&gif_temporary_stop, sizeof(gif_temporary_stop));
+    state.Do(&mscom);
+    state.Do(&smcom);
+    state.Do(&msflag);
+    state.Do(&smflag);
+    state.Do(&control);
+    state.Do(&SIF0_FIFO);
+    state.Do(&SIF1_FIFO);
 }
 
-void GraphicsInterface::save_state(ofstream& state)
+void VectorInterface::do_state(StateSerializer& state)
 {
-    int size = FIFO.size();
-    uint128_t FIFO_buffer[16];
-    for (int i = 0; i < size; i++)
-    {
-        FIFO_buffer[i] = FIFO.front();
-        FIFO.pop();
-    }
-    state.write((char*)&size, sizeof(size));
-    state.write((char*)&FIFO_buffer, sizeof(uint128_t) * size);
-    for (int i = 0; i < size; i++)
-        FIFO.push(FIFO_buffer[i]);
-
-    state.write((char*)&path, sizeof(path));
-    state.write((char*)&active_path, sizeof(active_path));
-    state.write((char*)&path_queue, sizeof(path_queue));
-    state.write((char*)&path3_vif_masked, sizeof(path3_vif_masked));
-    state.write((char*)&internal_Q, sizeof(internal_Q));
-    state.write((char*)&path3_dma_running, sizeof(path3_dma_running));
-    state.write((char*)&intermittent_mode, sizeof(intermittent_mode));
-    state.write((char*)&outputting_path, sizeof(outputting_path));
-    state.write((char*)&path3_mode_masked, sizeof(path3_mode_masked));
-    state.write((char*)&gif_temporary_stop, sizeof(gif_temporary_stop));
-}
-
-void SubsystemInterface::load_state(ifstream& state)
-{
-    state.read((char*)&mscom, sizeof(mscom));
-    state.read((char*)&smcom, sizeof(smcom));
-    state.read((char*)&msflag, sizeof(msflag));
-    state.read((char*)&smflag, sizeof(smflag));
-    state.read((char*)&control, sizeof(control));
-
-    int size;
-    uint32_t buffer[32];
-    state.read((char*)&size, sizeof(int));
-    state.read((char*)&buffer, sizeof(uint32_t) * size);
-
-    //FIFOs are already cleared by the reset call, so no need to pop them
-    for (int i = 0; i < size; i++)
-        SIF0_FIFO.push(buffer[i]);
-
-    state.read((char*)&size, sizeof(int));
-    state.read((char*)&buffer, sizeof(uint32_t) * size);
-
-    for (int i = 0; i < size; i++)
-        SIF1_FIFO.push(buffer[i]);
-}
-
-void SubsystemInterface::save_state(ofstream& state)
-{
-    state.write((char*)&mscom, sizeof(mscom));
-    state.write((char*)&smcom, sizeof(smcom));
-    state.write((char*)&msflag, sizeof(msflag));
-    state.write((char*)&smflag, sizeof(smflag));
-    state.write((char*)&control, sizeof(control));
-
-    int size = SIF0_FIFO.size();
-    uint32_t buffer[32];
-    for (int i = 0; i < size; i++)
-    {
-        buffer[i] = SIF0_FIFO.front();
-        SIF0_FIFO.pop();
-    }
-    state.write((char*)&size, sizeof(int));
-    state.write((char*)&buffer, sizeof(uint32_t) * size);
-    for (int i = 0; i < size; i++)
-        SIF0_FIFO.push(buffer[i]);
-
-    size = SIF1_FIFO.size();
-    for (int i = 0; i < size; i++)
-    {
-        buffer[i] = SIF1_FIFO.front();
-        SIF1_FIFO.pop();
-    }
-    state.write((char*)&size, sizeof(int));
-    state.write((char*)&buffer, sizeof(uint32_t) * size);
-    for (int i = 0; i < size; i++)
-        SIF1_FIFO.push(buffer[i]);
-}
-
-void VectorInterface::load_state(ifstream& state)
-{
+    /*
     int size, internal_size;
     uint32_t FIFO_buffer[64];
     state.read((char*)&size, sizeof(size));
@@ -555,45 +505,49 @@ void VectorInterface::load_state(ifstream& state)
     state.read((char*)&FIFO_buffer, sizeof(uint32_t) * internal_size);
     for (int i = 0; i < internal_size; i++)
         internal_FIFO.push(FIFO_buffer[i]);
+        */
 
-    state.read((char*)&imm, sizeof(imm));
-    state.read((char*)&command, sizeof(command));
-    state.read((char*)&mpg, sizeof(mpg));
-    state.read((char*)&unpack, sizeof(unpack));
-    state.read((char*)&wait_for_VU, sizeof(wait_for_VU));
-    state.read((char*)&flush_stall, sizeof(flush_stall));
-    state.read((char*)&wait_cmd_value, sizeof(wait_cmd_value));
+    state.Do(&FIFO);
+    state.Do(&internal_FIFO);
 
-    state.read((char*)&buffer_size, sizeof(buffer_size));
-    state.read((char*)&buffer, sizeof(buffer));
+    state.Do(&imm);
+    state.Do(&command);
+    state.Do(&mpg);
+    state.Do(&unpack);
+    state.Do(&wait_for_VU);
+    state.Do(&flush_stall);
+    state.Do(&wait_cmd_value);
+    state.Do(&buffer_size);
+    state.Do(&buffer);
 
-    state.read((char*)&DBF, sizeof(DBF));
-    state.read((char*)&CYCLE, sizeof(CYCLE));
-    state.read((char*)&OFST, sizeof(OFST));
-    state.read((char*)&BASE, sizeof(BASE));
-    state.read((char*)&TOP, sizeof(TOP));
-    state.read((char*)&TOPS, sizeof(TOPS));
-    state.read((char*)&ITOP, sizeof(ITOP));
-    state.read((char*)&ITOPS, sizeof(ITOPS));
-    state.read((char*)&MODE, sizeof(MODE));
-    state.read((char*)&MASK, sizeof(MASK));
-    state.read((char*)&ROW, sizeof(ROW));
-    state.read((char*)&COL, sizeof(COL));
-    state.read((char*)&CODE, sizeof(CODE));
-    state.read((char*)&command_len, sizeof(command_len));
+    state.Do(&DBF);
+    state.Do(&CYCLE);
+    state.Do(&OFST);
+    state.Do(&BASE);
+    state.Do(&TOP);
+    state.Do(&TOPS);
+    state.Do(&ITOP);
+    state.Do(&ITOPS);
+    state.Do(&MODE);
+    state.Do(&MASK);
+    state.Do(&ROW);
+    state.Do(&COL);
+    state.Do(&CODE);
+    state.Do(&command_len);
 
-    state.read((char*)&vif_ibit_detected, sizeof(vif_ibit_detected));
-    state.read((char*)&vif_interrupt, sizeof(vif_interrupt));
-    state.read((char*)&vif_stalled, sizeof(vif_stalled));
-    state.read((char*)&vif_stop, sizeof(vif_stop));
-    state.read((char*)&vif_forcebreak, sizeof(vif_forcebreak));
-    state.read((char*)&vif_cmd_status, sizeof(vif_cmd_status));
-    state.read((char*)&internal_WL, sizeof(internal_WL));
+    state.Do(&vif_ibit_detected);
+    state.Do(&vif_interrupt);
+    state.Do(&vif_stalled);
+    state.Do(&vif_stop);
+    state.Do(&vif_forcebreak);
+    state.Do(&vif_cmd_status);
+    state.Do(&internal_WL);
 
-    state.read((char*)&mark_detected, sizeof(mark_detected));
-    state.read((char*)&VIF_ERR, sizeof(VIF_ERR));
+    state.Do(&mark_detected);
+    state.Do(&VIF_ERR);
 }
 
+/*
 void VectorInterface::save_state(ofstream& state)
 {
     int size = FIFO.size();
@@ -656,6 +610,7 @@ void VectorInterface::save_state(ofstream& state)
     state.write((char*)&mark_detected, sizeof(mark_detected));
     state.write((char*)&VIF_ERR, sizeof(VIF_ERR));
 }
+*/
 
 void CDVD_Drive::do_state(StateSerializer& state)
 {
@@ -687,14 +642,17 @@ void CDVD_Drive::do_state(StateSerializer& state)
     state.Do(&rtc);
 }
 
-void Scheduler::load_state(ifstream& state)
+void Scheduler::do_state(StateSerializer& state)
 {
-    state.read((char*)&ee_cycles, sizeof(ee_cycles));
-    state.read((char*)&bus_cycles, sizeof(bus_cycles));
-    state.read((char*)&iop_cycles, sizeof(iop_cycles));
-    state.read((char*)&run_cycles, sizeof(run_cycles));
-    state.read((char*)&closest_event_time, sizeof(closest_event_time));
+    state.Do(&ee_cycles);
+    state.Do(&bus_cycles);
+    state.Do(&iop_cycles);
+    state.Do(&run_cycles);
+    state.Do(&closest_event_time);
 
+    state.Do(&events);
+    state.Do(&timers);
+    /*
     events.clear();
 
     int event_size = 0;
@@ -722,8 +680,10 @@ void Scheduler::load_state(ifstream& state)
 
         timers.push_back(timer);
     }
+    */
 }
 
+/*
 void Scheduler::save_state(ofstream& state)
 {
     state.write((char*)&ee_cycles, sizeof(ee_cycles));
@@ -749,6 +709,7 @@ void Scheduler::save_state(ofstream& state)
     for (int i = 0; i < timer_size; i++)
         state.write((char*)&timers[i], sizeof(SchedulerTimer));
 }
+*/
 
 void Gamepad::do_state(StateSerializer& state)
 {
