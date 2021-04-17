@@ -87,8 +87,11 @@ class StateSerializer
         }
         else
         {
-            for (uint32_t i = 0; i < length; i++)
-                Do(&data[i]);
+            for (auto it = data->begin(); it != data->end(); it++)
+            {
+                T value = *it;
+                Do((&value));
+            }
         }
     }
 
