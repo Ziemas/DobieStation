@@ -145,7 +145,7 @@ void Emulator::do_state(StateSerializer& state)
     //vif1.load_state(ss);
 
     ////CDVD
-    //cdvd.load_state(ss);
+    cdvd.do_state(state);
 
     ////GS
     ////Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
@@ -177,7 +177,8 @@ void EmotionEngine::do_state(StateSerializer& state)
     state.Do(&delay_slot);
 
     state.Do(&deci2size);
-    state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
+    //state.DoBytes(&deci2handlers, sizeof(Deci2Handler) * deci2size);
+    state.DoArray(&deci2handlers, 128);
 }
 
 void Cop0::do_state(StateSerializer& state)
@@ -656,64 +657,34 @@ void VectorInterface::save_state(ofstream& state)
     state.write((char*)&VIF_ERR, sizeof(VIF_ERR));
 }
 
-void CDVD_Drive::load_state(ifstream& state)
+void CDVD_Drive::do_state(StateSerializer& state)
 {
-    state.read((char*)&file_size, sizeof(file_size));
-    state.read((char*)&read_bytes_left, sizeof(read_bytes_left));
-    state.read((char*)&disc_type, sizeof(disc_type));
-    state.read((char*)&speed, sizeof(speed));
-    state.read((char*)&current_sector, sizeof(current_sector));
-    state.read((char*)&sector_pos, sizeof(sector_pos));
-    state.read((char*)&sectors_left, sizeof(sectors_left));
-    state.read((char*)&block_size, sizeof(block_size));
-    state.read((char*)&read_buffer, sizeof(read_buffer));
-    state.read((char*)&ISTAT, sizeof(ISTAT));
-    state.read((char*)&drive_status, sizeof(drive_status));
-    state.read((char*)&is_spinning, sizeof(is_spinning));
+    state.Do(&file_size);
+    state.Do(&read_bytes_left);
+    state.Do(&disc_type);
+    state.Do(&speed);
+    state.Do(&current_sector);
+    state.Do(&sector_pos);
+    state.Do(&sectors_left);
+    state.Do(&block_size);
+    state.Do(&read_buffer);
+    state.Do(&ISTAT);
+    state.Do(&drive_status);
+    state.Do(&is_spinning);
 
-    state.read((char*)&active_N_command, sizeof(active_N_command));
-    state.read((char*)&N_command, sizeof(N_command));
-    state.read((char*)&N_command_params, sizeof(N_command_params));
-    state.read((char*)&N_params, sizeof(N_params));
-    state.read((char*)&N_status, sizeof(N_status));
+    state.Do(&active_N_command);
+    state.Do(&N_command);
+    state.Do(&N_command_params);
+    state.Do(&N_params);
+    state.Do(&N_status);
 
-    state.read((char*)&S_command, sizeof(S_command));
-    state.read((char*)&S_command_params, sizeof(S_command_params));
-    state.read((char*)&S_outdata, sizeof(S_outdata));
-    state.read((char*)&S_params, sizeof(S_params));
-    state.read((char*)&S_out_params, sizeof(S_out_params));
-    state.read((char*)&S_status, sizeof(S_status));
-    state.read((char*)&rtc, sizeof(rtc));
-}
-
-void CDVD_Drive::save_state(ofstream& state)
-{
-    state.write((char*)&file_size, sizeof(file_size));
-    state.write((char*)&read_bytes_left, sizeof(read_bytes_left));
-    state.write((char*)&disc_type, sizeof(disc_type));
-    state.write((char*)&speed, sizeof(speed));
-    state.write((char*)&current_sector, sizeof(current_sector));
-    state.write((char*)&sector_pos, sizeof(sector_pos));
-    state.write((char*)&sectors_left, sizeof(sectors_left));
-    state.write((char*)&block_size, sizeof(block_size));
-    state.write((char*)&read_buffer, sizeof(read_buffer));
-    state.write((char*)&ISTAT, sizeof(ISTAT));
-    state.write((char*)&drive_status, sizeof(drive_status));
-    state.write((char*)&is_spinning, sizeof(is_spinning));
-
-    state.write((char*)&active_N_command, sizeof(active_N_command));
-    state.write((char*)&N_command, sizeof(N_command));
-    state.write((char*)&N_command_params, sizeof(N_command_params));
-    state.write((char*)&N_params, sizeof(N_params));
-    state.write((char*)&N_status, sizeof(N_status));
-
-    state.write((char*)&S_command, sizeof(S_command));
-    state.write((char*)&S_command_params, sizeof(S_command_params));
-    state.write((char*)&S_outdata, sizeof(S_outdata));
-    state.write((char*)&S_params, sizeof(S_params));
-    state.write((char*)&S_out_params, sizeof(S_out_params));
-    state.write((char*)&S_status, sizeof(S_status));
-    state.write((char*)&rtc, sizeof(rtc));
+    state.Do(&S_command);
+    state.Do(&S_command_params);
+    state.Do(&S_outdata);
+    state.Do(&S_params);
+    state.Do(&S_out_params);
+    state.Do(&S_status);
+    state.Do(&rtc);
 }
 
 void Scheduler::load_state(ifstream& state)
