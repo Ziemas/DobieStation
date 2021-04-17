@@ -2,11 +2,11 @@
 #define SPU_HPP
 #include <cstdint>
 #include <fstream>
+#include "core/serialize.hpp"
 #include "spu_envelope.hpp"
 #include "../../audio/utils.hpp"
 #include "spu_adpcm.hpp"
 #include "spu_utils.hpp"
-#include "../../serialize.hpp"
 
 struct VoiceMix
 {

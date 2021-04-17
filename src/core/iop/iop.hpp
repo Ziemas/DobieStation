@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <fstream>
 #include "iop_cop0.hpp"
-#include "../serialize.hpp"
+#include "core/serialize.hpp"
 
 class Emulator;
 

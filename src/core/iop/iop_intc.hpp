@@ -2,7 +2,7 @@
 #define IOP_INTC_HPP
 #include <cstdint>
 #include <fstream>
-#include "../serialize.hpp"
+#include "core/serialize.hpp"
 
 class IOP;
 

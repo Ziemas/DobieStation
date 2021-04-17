@@ -5,7 +5,7 @@
 #include <memory>
 #include <algorithm>
 #include <string.h>
-#include "../../serialize.hpp"
+#include "core/serialize.hpp"
 #include "cdvd_container.hpp"
 
 class IOP_INTC;

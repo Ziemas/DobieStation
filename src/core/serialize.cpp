@@ -152,9 +152,9 @@ void Emulator::do_state(StateSerializer& state)
     //gs.load_state(ss);
 
     //scheduler.load_state(ss);
-    //pad.load_state(ss);
-    //spu.load_state(ss);
-    //spu2.load_state(ss);
+    pad.do_state(state);
+    spu.do_state(state);
+    spu2.do_state(state);
 }
 
 void EmotionEngine::do_state(StateSerializer& state)
