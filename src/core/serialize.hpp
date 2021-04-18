@@ -118,12 +118,12 @@ class StateSerializer
 
     bool DoMarker(const char* marker)
     {
-        auto len = strlen(marker) + 1;
+        auto len = strlen(marker);
         auto fileVal = std::make_unique<char[]>(len);
-        strcpy(fileVal.get(), marker);
+        memcpy(fileVal.get(), marker, len);
         DoArray(fileVal.get(), len);
 
-        if (m_mode == Mode::Write || strcmp(marker, fileVal.get()) == 0)
+        if (m_mode == Mode::Write || memcmp(marker, fileVal.get(), len) == 0)
             return true;
 
         fprintf(stderr, "Savestate marker mismatch: found '%s' expected '%s'\n", fileVal.get(), marker);
