@@ -1,7 +1,9 @@
 #ifndef __SERIALIZE_H_
 #define __SERIALIZE_H_
+#include <cstring>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <queue>
 #include <vector>
 
@@ -112,6 +114,21 @@ class StateSerializer
         {
             Do(&ptr[i]);
         }
+    }
+
+    bool DoMarker(const char* marker)
+    {
+        auto len = strlen(marker) + 1;
+        auto fileVal = std::make_unique<char[]>(len);
+        strcpy(fileVal.get(), marker);
+        DoArray(fileVal.get(), len);
+
+        if (m_mode == Mode::Write || strcmp(marker, fileVal.get()) == 0)
+            return true;
+
+        fprintf(stderr, "Savestate marker mismatch: found '%s' expected '%s'\n", fileVal.get(), marker);
+
+        return false;
     }
 
   private:

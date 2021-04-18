@@ -3,9 +3,7 @@
 #include <cstring>
 #include <fstream>
 
-#define VER_MAJOR 0
-#define VER_MINOR 0
-#define VER_REV 50
+static constexpr uint32_t STATE_VERSION = 51;
 
 using namespace std;
 
@@ -42,22 +40,18 @@ void Emulator::load_state(const char* file_name)
         return;
     }
 
-    //Perform sanity checks
-    char dobie_buffer[5];
-    state.read(dobie_buffer, sizeof(dobie_buffer));
-    if (strncmp(dobie_buffer, "DOBIE", 5))
+    StateSerializer ss(state, StateSerializer::Mode::Read);
+    if (ss.DoMarker("DOBIE") == false)
     {
         state.close();
         Errors::non_fatal("Save state invalid");
         return;
     }
 
-    uint32_t major, minor, rev;
-    state.read((char*)&major, sizeof(major));
-    state.read((char*)&minor, sizeof(minor));
-    state.read((char*)&rev, sizeof(rev));
+    uint32_t rev;
+    ss.Do(&rev);
 
-    if (major != VER_MAJOR || minor != VER_MINOR || rev != VER_REV)
+    if (rev != STATE_VERSION)
     {
         state.close();
         Errors::non_fatal("Save state doesn't match version");
@@ -66,7 +60,6 @@ void Emulator::load_state(const char* file_name)
 
     reset();
 
-    StateSerializer ss(state, StateSerializer::Mode::Read);
     do_state(ss);
 
     state.close();
@@ -85,17 +78,12 @@ void Emulator::save_state(const char* file_name)
         return;
     }
 
-    uint32_t major = VER_MAJOR;
-    uint32_t minor = VER_MINOR;
-    uint32_t rev = VER_REV;
-
-    //Sanity check and version
-    state << "DOBIE";
-    state.write((char*)&major, sizeof(uint32_t));
-    state.write((char*)&minor, sizeof(uint32_t));
-    state.write((char*)&rev, sizeof(uint32_t));
-
     StateSerializer ss(state, StateSerializer::Mode::Write);
+    ss.DoMarker("DOBIE");
+
+    uint32_t rev = STATE_VERSION;
+    ss.Do(&rev);
+
     do_state(ss);
 
     state.close();
