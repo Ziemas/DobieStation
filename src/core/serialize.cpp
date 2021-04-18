@@ -64,10 +64,10 @@ void Emulator::load_state(const char* file_name)
         return;
     }
 
+    reset();
+
     StateSerializer ss(state, StateSerializer::Mode::Read);
     do_state(ss);
-
-    reset();
 
     state.close();
     printf("[Emulator] Success!\n");
@@ -76,8 +76,6 @@ void Emulator::load_state(const char* file_name)
 void Emulator::save_state(const char* file_name)
 {
     save_requested = false;
-
-    std::vector<char> data = {};
 
     printf("[Emulator] Saving state...\n");
     fstream state(file_name, ios::binary | fstream::out | fstream::trunc);
@@ -437,7 +435,8 @@ void IOP_DMA::do_state(StateSerializer& state)
 
     //We have to reapply the function pointers as there's no guarantee they will remain in memory
     //the next time Dobie is loaded
-    apply_dma_functions();
+    if (state.GetMode() == StateSerializer::Mode::Read)
+        apply_dma_functions();
 }
 
 void GraphicsInterface::do_state(StateSerializer& state)
