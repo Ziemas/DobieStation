@@ -441,29 +441,6 @@ void IOP_DMA::do_state(StateSerializer& state)
 
 void GraphicsInterface::do_state(StateSerializer& state)
 {
-    //if (state.GetMode() == StateSerializer::Mode::Read)
-    //{
-    //    int size;
-    //    uint128_t FIFO_buffer[16];
-    //    state.Do(&size);
-    //    state.DoBytes(&FIFO_buffer, sizeof(uint128_t) * size);
-    //    for (int i = 0; i < size; i++)
-    //        FIFO.push(FIFO_buffer[i]);
-    //}
-    //else
-    //{
-    //    int size = static_cast<int>(FIFO.size());
-    //    uint128_t FIFO_buffer[16];
-    //    for (int i = 0; i < size; i++)
-    //    {
-    //        FIFO_buffer[i] = FIFO.front();
-    //        FIFO.pop();
-    //    }
-    //    state.Do(&size);
-    //    state.DoBytes(&FIFO_buffer, sizeof(uint128_t) * size);
-    //    for (int i = 0; i < size; i++)
-    //        FIFO.push(FIFO_buffer[i]);
-    //}
     state.Do(&FIFO);
 
     state.Do(&path);
@@ -491,20 +468,6 @@ void SubsystemInterface::do_state(StateSerializer& state)
 
 void VectorInterface::do_state(StateSerializer& state)
 {
-    /*
-    int size, internal_size;
-    uint32_t FIFO_buffer[64];
-    state.read((char*)&size, sizeof(size));
-    state.read((char*)&FIFO_buffer, sizeof(uint32_t) * size);
-    for (int i = 0; i < size; i++)
-        FIFO.push(FIFO_buffer[i]);
-
-    state.read((char*)&internal_size, sizeof(internal_size));
-    state.read((char*)&FIFO_buffer, sizeof(uint32_t) * internal_size);
-    for (int i = 0; i < internal_size; i++)
-        internal_FIFO.push(FIFO_buffer[i]);
-        */
-
     state.Do(&FIFO);
     state.Do(&internal_FIFO);
 
@@ -544,71 +507,6 @@ void VectorInterface::do_state(StateSerializer& state)
     state.Do(&mark_detected);
     state.Do(&VIF_ERR);
 }
-
-/*
-void VectorInterface::save_state(ofstream& state)
-{
-    int size = FIFO.size();
-    int internal_size = internal_FIFO.size();
-    uint32_t FIFO_buffer[64];
-    for (int i = 0; i < size; i++)
-    {
-        FIFO_buffer[i] = FIFO.front();
-        FIFO.pop();
-    }
-    state.write((char*)&size, sizeof(size));
-    state.write((char*)&FIFO_buffer, sizeof(uint32_t) * size);
-    for (int i = 0; i < size; i++)
-        FIFO.push(FIFO_buffer[i]);
-
-    for (int i = 0; i < internal_size; i++)
-    {
-        FIFO_buffer[i] = internal_FIFO.front();
-        internal_FIFO.pop();
-    }
-    state.write((char*)&internal_size, sizeof(internal_size));
-    state.write((char*)&FIFO_buffer, sizeof(uint32_t) * internal_size);
-    for (int i = 0; i < internal_size; i++)
-        internal_FIFO.push(FIFO_buffer[i]);
-
-    state.write((char*)&imm, sizeof(imm));
-    state.write((char*)&command, sizeof(command));
-    state.write((char*)&mpg, sizeof(mpg));
-    state.write((char*)&unpack, sizeof(unpack));
-    state.write((char*)&wait_for_VU, sizeof(wait_for_VU));
-    state.write((char*)&flush_stall, sizeof(flush_stall));
-    state.write((char*)&wait_cmd_value, sizeof(wait_cmd_value));
-
-    state.write((char*)&buffer_size, sizeof(buffer_size));
-    state.write((char*)&buffer, sizeof(buffer));
-
-    state.write((char*)&DBF, sizeof(DBF));
-    state.write((char*)&CYCLE, sizeof(CYCLE));
-    state.write((char*)&OFST, sizeof(OFST));
-    state.write((char*)&BASE, sizeof(BASE));
-    state.write((char*)&TOP, sizeof(TOP));
-    state.write((char*)&TOPS, sizeof(TOPS));
-    state.write((char*)&ITOP, sizeof(ITOP));
-    state.write((char*)&ITOPS, sizeof(ITOPS));
-    state.write((char*)&MODE, sizeof(MODE));
-    state.write((char*)&MASK, sizeof(MASK));
-    state.write((char*)&ROW, sizeof(ROW));
-    state.write((char*)&COL, sizeof(COL));
-    state.write((char*)&CODE, sizeof(CODE));
-    state.write((char*)&command_len, sizeof(command_len));
-
-    state.write((char*)&vif_ibit_detected, sizeof(vif_ibit_detected));
-    state.write((char*)&vif_interrupt, sizeof(vif_interrupt));
-    state.write((char*)&vif_stalled, sizeof(vif_stalled));
-    state.write((char*)&vif_stop, sizeof(vif_stop));
-    state.write((char*)&vif_forcebreak, sizeof(vif_forcebreak));
-    state.write((char*)&vif_cmd_status, sizeof(vif_cmd_status));
-    state.write((char*)&internal_WL, sizeof(internal_WL));
-
-    state.write((char*)&mark_detected, sizeof(mark_detected));
-    state.write((char*)&VIF_ERR, sizeof(VIF_ERR));
-}
-*/
 
 void CDVD_Drive::do_state(StateSerializer& state)
 {
@@ -650,64 +548,7 @@ void Scheduler::do_state(StateSerializer& state)
 
     state.Do(&events);
     state.Do(&timers);
-    /*
-    events.clear();
-
-    int event_size = 0;
-    state.read((char*)&event_size, sizeof(event_size));
-
-    for (int i = 0; i < event_size; i++)
-    {
-        SchedulerEvent event;
-        state.read((char*)&event, sizeof(event));
-
-        events.push_back(event);
-    }
-
-    state.read((char*)&next_event_id, sizeof(next_event_id));
-
-    int timer_size = 0;
-    state.read((char*)&timer_size, sizeof(timer_size));
-
-    timers.clear();
-
-    for (int i = 0; i < timer_size; i++)
-    {
-        SchedulerTimer timer;
-        state.read((char*)&timer, sizeof(timer));
-
-        timers.push_back(timer);
-    }
-    */
 }
-
-/*
-void Scheduler::save_state(ofstream& state)
-{
-    state.write((char*)&ee_cycles, sizeof(ee_cycles));
-    state.write((char*)&bus_cycles, sizeof(bus_cycles));
-    state.write((char*)&iop_cycles, sizeof(iop_cycles));
-    state.write((char*)&run_cycles, sizeof(run_cycles));
-    state.write((char*)&closest_event_time, sizeof(closest_event_time));
-
-    int event_size = events.size();
-    state.write((char*)&event_size, sizeof(event_size));
-
-    for (auto it = events.begin(); it != events.end(); it++)
-    {
-        SchedulerEvent event = *it;
-        state.write((char*)&event, sizeof(event));
-    }
-
-    state.write((char*)&next_event_id, sizeof(next_event_id));
-
-    int timer_size = timers.size();
-    state.write((char*)&timer_size, sizeof(timer_size));
-
-    for (int i = 0; i < timer_size; i++)
-        state.write((char*)&timers[i], sizeof(SchedulerTimer));
-}
-*/
 
 void Gamepad::do_state(StateSerializer& state)
 {
