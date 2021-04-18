@@ -246,7 +246,7 @@ void VectorUnit::do_state(StateSerializer& state)
     state.Do(&status_value);
     state.Do(&status_pipe);
     state.Do(&int_branch_pipeline); // TODO complicated struct
-    state.DoArray(ILW_pipeline, 4);        // TODO array
+    state.DoArray(ILW_pipeline, 4); // TODO array
 
     state.DoArray(pipeline_state, 2); // TODO array
 
