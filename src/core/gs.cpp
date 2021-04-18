@@ -350,20 +350,6 @@ void GraphicsSynthesizer::do_state(StateSerializer& state)
 
     state.Do(&reg);
 }
-/*
-void GraphicsSynthesizer::save_state(std::ofstream &state)
-{
-    GSMessagePayload payload;
-    payload.save_state_payload = {&state};
-
-    gs_thread.send_message({ GSCommand::save_state_t, payload });
-    gs_thread.wake_thread();
-    GSReturnMessage data;
-    gs_thread.wait_for_return(GSReturn::save_state_done_t, data);
-    
-    state.write((char*)&reg, sizeof(reg));
-}
-*/
 
 void GraphicsSynthesizer::send_dump_request()
 {

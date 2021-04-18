@@ -369,17 +369,7 @@ void GraphicsSynthesizerThread::event_loop()
                         notifier.notify_one();
                         break;
                     }
-                    /*
-                    case save_state_t:
-                    {
-                        save_state(data.payload.save_state_payload.state);
-                        GSReturnMessagePayload return_payload;
-                        return_payload.no_payload = { 0 };
-                        return_queue->push({ GSReturn::save_state_done_t,return_payload });
-                        recieve_data = true;
-                        notifier.notify_one();
-                        break;
-                    }
+                   /*
                     case gsdump_t:
                     {
                         printf("gs dump! ");

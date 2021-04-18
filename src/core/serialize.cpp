@@ -48,7 +48,7 @@ void Emulator::load_state(const char* file_name)
         return;
     }
 
-    uint32_t rev;
+    uint32_t rev = 0;
     ss.Do(&rev);
 
     if (rev != STATE_VERSION)
@@ -80,9 +80,7 @@ void Emulator::save_state(const char* file_name)
 
     StateSerializer ss(state, StateSerializer::Mode::Write);
     ss.DoMarker("DOBIE");
-
-    uint32_t rev = STATE_VERSION;
-    ss.Do(&rev);
+    ss.Do(&STATE_VERSION);
 
     do_state(ss);
 
