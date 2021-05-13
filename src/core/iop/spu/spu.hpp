@@ -256,6 +256,7 @@ class SPU
 
         uint16_t read(uint32_t addr);
         void write(uint32_t addr, uint16_t data);
+        void increment_addr(uint32_t& addr);
         void memout(MEMOUT addr, int16_t sample);
 
         void run_reverb(stereo_sample wet);
@@ -296,6 +297,12 @@ class SPU
         void save_state(std::ofstream& state);
 
 };
+
+inline void SPU::increment_addr(uint32_t& addr)
+{
+    addr++;
+    addr &= 0xFFFFF;
+}
 
 inline bool SPU::running_ADMA()
 {

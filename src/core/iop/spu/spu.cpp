@@ -115,8 +115,7 @@ void SPU::switch_block(int voice_id)
     voice.pcm = voice.adpcm.decode_block((uint8_t*)(RAM+voice.current_addr));
 
     spu_check_irq(voice.current_addr);
-    voice.current_addr++;
-    voice.current_addr &= 0x000FFFFF;
+    increment_addr(voice.current_addr);
     voice.new_block = false;
 
     voice.old3 = voice.old2;
@@ -155,8 +154,7 @@ stereo_sample SPU::voice_gen_sample(int voice_id)
         if ((voice.sample_idx % 4) == 0)
         {
             spu_check_irq(voice.current_addr);
-            voice.current_addr++;
-            voice.current_addr &= 0x000FFFFF;
+            increment_addr(voice.current_addr);
         }
 
         if (voice.sample_idx == 24)
@@ -382,13 +380,11 @@ uint32_t SPU::read_DMA()
 {
     uint32_t value = RAM[current_addr];
     spu_check_irq(current_addr);
-    current_addr++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 
     value |= ((uint32_t)RAM[current_addr]) << 16;
     spu_check_irq(current_addr);
-    current_addr ++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 
     status.DMA_busy = true;
     status.DMA_ready = false;
@@ -400,13 +396,11 @@ void SPU::write_DMA(uint32_t value)
     //printf("[SPU%d] Write mem $%08X ($%08X)\n", id, value, current_addr);
     RAM[current_addr] = value & 0xFFFF;
     spu_check_irq(current_addr);
-    current_addr++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 
     RAM[current_addr] = value >> 16;
     spu_check_irq(current_addr);
-    current_addr++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 
     status.DMA_busy = true;
     status.DMA_ready = false;
@@ -464,8 +458,7 @@ uint16_t SPU::read_mem()
     printf("[SPU%d] Read mem $%04X ($%08X)\n", id, return_value, current_addr);
 
     spu_check_irq(current_addr);
-    current_addr++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 
     return return_value;
 }
@@ -476,8 +469,7 @@ void SPU::write_mem(uint16_t value)
     RAM[current_addr] = value;
     
     spu_check_irq(current_addr);
-    current_addr++;
-    current_addr &= 0x000FFFFF;
+    increment_addr(current_addr);
 }
 
 uint16_t SPU::read16(uint32_t addr)
