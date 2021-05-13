@@ -16,6 +16,7 @@ add_subdirectory(ext/libchdr)
 find_package(Threads REQUIRED)
 
 # Modules
+add_subdirectory(src/common)
 add_subdirectory(src/core)
 add_subdirectory(src/qt)
 
