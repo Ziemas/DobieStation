@@ -5,7 +5,7 @@
 # VTUNE_LIBRARIES		path to vtune libs
 
 find_path(VTUNE_INCLUDE_DIRS NAMES jitprofiling.h PATHS
-    /opt/intel/oneapi/vtune/2021.4.0/lib64
+    /opt/intel/oneapi/vtune/2021.4.0/sdk/include
     /opt/intel/vtune_profiler_2020.3.0.612611/sdk/include
     /opt/intel/vtune_amplifier_xe_2018/include
     /opt/intel/vtune_amplifier_xe_2017/include
@@ -13,7 +13,7 @@ find_path(VTUNE_INCLUDE_DIRS NAMES jitprofiling.h PATHS
     )
 
 find_library(VTUNE_LIBRARIES NAMES libjitprofiling.a PATHS
-    /opt/intel/oneapi/vtune/2021.4.0/lib64
+    /opt/intel/oneapi/vtune/2021.4.0/sdk/lib64
     /opt/intel/vtune_profiler_2020.3.0.612611/sdk/lib64
     /opt/intel/vtune_amplifier_xe_2018/lib64
     /opt/intel/vtune_amplifier_xe_2017/lib64
