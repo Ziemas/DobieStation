@@ -1102,6 +1102,11 @@ void EmotionEngine::tlbp()
 
 void EmotionEngine::eret()
 {
+    static uint32_t eretCount = 0;
+    eretCount++;
+    if (eretCount > 0x10000000)
+        exit(0);
+
     //printf("[EE] Return from exception\n");
     if (cp0->status.error)
     {
