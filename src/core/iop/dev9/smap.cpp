@@ -51,8 +51,8 @@ uint16_t SMAP::read16(uint32_t address)
             return txdma_slice_count;
         case SMAP_REG(SMAP_R_TXFIFO_WR_PTR):
             // TODO: check if we need this to offset to the correct memory
-            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_WR_PTR %04x\n", txfifo.wpos());
-            return txfifo.write;
+            printf("[DEV9] [SMAP] Read SMAP_R_TXFIFO_WR_PTR %04zx\n", txfifo.wpos());
+            return static_cast<uint16_t>(txfifo.write);
         case SMAP_REG(SMAP_R_RXFIFO_SIZE):
             // Misleading reg name? SMAP doesn't control fifo size
             // this seems to be used for DMA slice count
@@ -60,8 +60,8 @@ uint16_t SMAP::read16(uint32_t address)
             return rxdma_slice_count;
         case SMAP_REG(SMAP_R_RXFIFO_RD_PTR):
             // TODO: check if we need this to offset to the correct memory
-            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_RD_PTR %04x\n", txfifo.rpos());
-            return rxfifo.read;
+            printf("[DEV9] [SMAP] Read SMAP_R_RXFIFO_RD_PTR %04zx\n", txfifo.rpos());
+            return static_cast<uint16_t>(rxfifo.read);
     }
 
     printf("[DEV9] [SMAP] Unrecognized read 16 from %08x\n", address);
@@ -271,7 +271,7 @@ void SMAP::write32(uint32_t address, uint32_t value)
         {
             case SMAP_REG(SMAP_R_TXFIFO_DATA):
             {
-                printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %x, %08x\n", txfifo.write, value);
+                printf("[DEV9] [SMAP] write32 SMAP_R_TXFIFO_DATA pos: %zx, %08x\n", txfifo.write, value);
                 txfifo.push(value);
                 return;
             }
